@@ -1,0 +1,996 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "Application Model",
+  "description": "Yet Another Application Model",
+  "default": {},
+  "required": [
+    "schema",
+    "metadata"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "description": "The unique schema name of application model",
+      "default": "application/1.0"
+    },
+    "metadata": {
+      "type": "object",
+      "title": "Metadata",
+      "description": "The metadata of this application",
+      "default": {},
+      "required": [
+        "app",
+        "namespace"
+      ],
+      "properties": {
+        "app": {
+          "type": "string",
+          "description": "Your Application Name",
+          "default": ""
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Your Team / Namespace",
+          "default": ""
+        },
+        "owner": {
+          "type": "string",
+          "description": "The owner of this application",
+          "default": ""
+        },
+        "repo": {
+          "type": "string",
+          "description": "The code repo of this application",
+          "default": ""
+        },
+        "description": {
+          "type": "string",
+          "description": "The brief description of your application",
+          "default": ""
+        }
+      }
+    },
+    "prepare": {
+      "type": "array",
+      "title": "Prerequisites",
+      "description": "Prepare infrastructure dependencies of your application",
+      "default": [],
+      "additionalItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "title": "Prerequisite Redis",
+            "description": "Describe prerequisites and dependencies",
+            "default": {},
+            "required": [
+              "type",
+              "name"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "redis",
+                  "redis-cluster"
+                ],
+                "title": "Redis Type",
+                "default": "redis"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "title": "Prerequisite Mongo",
+            "description": "Describe prerequisites and dependencies",
+            "default": {},
+            "required": [
+              "type",
+              "name"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "mongo"
+                ],
+                "description": "Dependency type",
+                "default": "mongo"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    "config": {
+      "type": "array",
+      "description": "Describe configurations and secrets of your application",
+      "default": [],
+      "additionalItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "title": "Configuration",
+            "description": "Configuration",
+            "default": {},
+            "required": [
+              "type",
+              "name"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "configMap"
+                ],
+                "description": "",
+                "default": ""
+              },
+              "name": {
+                "type": "string"
+              },
+              "asEnv": {
+                "type": "boolean",
+                "default": false
+              },
+              "mount": {
+                "type": "string",
+                "description": "Describe where the config map being mounted to",
+                "default": "/config"
+              },
+              "from": {
+                "type": "array",
+                "description": "Describe the configuration source, the relative file paths in application model directory",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "container": {
+                "type": "string",
+                "description": "The target container of this configuration",
+                "default": ""
+              }
+            },
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "title": "Application Secret",
+            "default": {},
+            "required": [
+              "type",
+              "name"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "secret"
+                ],
+                "description": "",
+                "default": ""
+              },
+              "name": {
+                "type": "string"
+              },
+              "asEnv": {
+                "type": "boolean",
+                "default": false
+              },
+              "mount": {
+                "type": "string",
+                "description": "Describe where the config map being mounted to",
+                "default": "/config"
+              },
+              "kms": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "aws",
+                      "vault"
+                    ]
+                  },
+                  "iamRole": {
+                    "type": "string"
+                  }
+                }
+              },
+              "keys": {
+                "type": "array",
+                "description": "Describe the secret source, the relative file paths in application model directory",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "name"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "generateRandom": {
+                          "type": "object",
+                          "required": [
+                            "length"
+                          ],
+                          "properties": {
+                            "length": {
+                              "type": "number"
+                            },
+                            "format": {
+                              "enum": [
+                                "numeric",
+                                "alphabet",
+                                "alphabetNumeric",
+                                "hex",
+                                "ascii"
+                              ],
+                              "default": "ascii"
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "container": {
+                "type": "string",
+                "description": "The target container of this secret",
+                "default": ""
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    "deploy": {
+      "type": "object",
+      "title": "Deployment",
+      "description": "Application deployment metadata",
+      "default": {},
+      "required": [
+        "type",
+        "imageRepo"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "deployment",
+            "statefulset",
+            "daemonset"
+          ],
+          "title": "Application Workload Type",
+          "description": "",
+          "default": "deployment"
+        },
+        "imageRepo": {
+          "type": "string",
+          "description": "Image repo for your application",
+          "default": ""
+        },
+        "version": {
+          "type": "string",
+          "description": "Image tag as deploy version",
+          "default": ""
+        },
+        "imagePullSecret": {
+          "type": "string",
+          "description": "Designate ImagePullSecret",
+          "default": ""
+        },
+        "commands": {
+          "type": "array",
+          "description": "The commands to start the application",
+          "default": [],
+          "additionalItems": true,
+          "items": {}
+        },
+        "port": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "As for multiple container ports, split by comma",
+              "default": ""
+            },
+            {
+              "type": "integer",
+              "description": "Container Port",
+              "default": 80
+            }
+          ]
+        },
+        "replica": {
+          "type": "integer",
+          "description": "The number of Pod replications",
+          "default": 1
+        },
+        "resource": {
+          "type": "object",
+          "description": "Describe the computing resource of each application instance",
+          "default": {},
+          "required": [
+            "cpu",
+            "memory",
+            "gpu"
+          ],
+          "properties": {
+            "cpu": {
+              "type": "object",
+              "description": "CPU cores",
+              "default": {},
+              "properties": {
+                "requests": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "limits": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            "memory": {
+              "type": "object",
+              "description": "Memory size",
+              "default": {},
+              "properties": {
+                "requests": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "limits": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            "gpu": {
+              "type": "object",
+              "description": "GPU resources",
+              "default": {},
+              "properties": {
+                "requests": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "limits": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "healthCheck": {
+          "type": "object",
+          "title": "Application HealthCheck",
+          "description": "Define health check of your application",
+          "default": {},
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Enable health check or not",
+              "default": true
+            },
+            "url": {
+              "type": "string",
+              "examples": [
+                "/health",
+                "http://127.0.0.1/health",
+                "tcp://127.0.0.1:6379"
+              ],
+              "description": "The health check url",
+              "default": ""
+            },
+            "port": {
+              "type": "integer",
+              "description": "Health check Port, the same as main container port if not set",
+              "default": 0
+            },
+            "interval": {
+              "type": "string",
+              "description": "Health check interval",
+              "default": "10s"
+            },
+            "livenessCheckDelay": {
+              "type": "string",
+              "default": "180s"
+            },
+            "onFailure": {
+              "type": "array",
+              "description": "Define actions when health check fails",
+              "default": [],
+              "additionalItems": true,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "default": {},
+                    "required": [
+                      "times",
+                      "action"
+                    ],
+                    "properties": {
+                      "times": {
+                        "type": "integer",
+                        "description": "The threshold of failure times",
+                        "default": 1
+                      },
+                      "action": {
+                        "enum": [
+                          "restart",
+                          "preventTraffic"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                ]
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "nodeSelector": {
+          "type": "string",
+          "examples": [
+            "my-app",
+            "app=my-app, beta.kubernetes.io/instance-type=t3.xlarge, kubernetes.io/os=linux"
+          ],
+          "description": "Choose where the Pod being scheduled",
+          "default": ""
+        },
+        "env": {
+          "type": "array",
+          "description": "Environment variables",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Environment Variable",
+                "description": "Environment variable",
+                "default": {},
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Variable name",
+                    "default": ""
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "Variable value",
+                    "default": ""
+                  },
+                  "container": {
+                    "type": "string",
+                    "description": "Designate which container to mount this environment variable",
+                    "default": ""
+                  },
+                  "valueFrom": {
+                    "type": "object",
+                    "description": "Value from field reference",
+                    "default": null
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "canaryMode": {
+          "type": "boolean",
+          "description": "When canary mode turned on, new version will be deployed independently, and at most 2 versions kept",
+          "default": false
+        },
+        "lifecycleHook": {
+          "type": "object",
+          "title": "Pod Lifecycle Hook",
+          "description": "Define The hooks when Pod lifecycle events triggered",
+          "default": {},
+          "properties": {
+            "afterStart": {
+              "type": "array",
+              "description": "The extra script to run after started",
+              "default": [],
+              "additionalItems": true,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "description": "Script commands",
+                    "default": ""
+                  }
+                ]
+              }
+            },
+            "beforeTerminate": {
+              "type": "array",
+              "description": "The extra script to run before terminating",
+              "default": [],
+              "additionalItems": true,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "description": "Script commands",
+                    "default": ""
+                  }
+                ]
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "sidecars": {
+          "type": "array",
+          "description": "The Sidecar container for the application",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Sidecar Container",
+                "description": "Sidecar containers run in same Pod as the application",
+                "default": {},
+                "required": [
+                  "name",
+                  "initContainer"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Container Name",
+                    "default": ""
+                  },
+                  "initContainer": {
+                    "type": "boolean",
+                    "description": "Is init container or not",
+                    "default": false
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "commands": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "healthCheck": {
+                    "$ref": "#/properties/deploy/properties/healthCheck"
+                  },
+                  "rawYaml": {
+                    "type": "object",
+                    "description": "Raw definitions of the sidecar container",
+                    "default": {},
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "gracefulPeriod": {
+          "type": "string",
+          "default": "60s"
+        },
+        "mounts": {
+          "type": "array",
+          "description": "Extra volume mounts",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Extra Volume Mount",
+                "description": "Extra volume mount",
+                "default": {},
+                "required": [
+                  "type",
+                  "name",
+                  "path"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "hostPath",
+                      "emptyDir",
+                      "storage"
+                    ],
+                    "title": "Extra Volume Mount Type",
+                    "description": "Volume Type",
+                    "default": "emptyDir"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Volume Mount Name",
+                    "default": ""
+                  },
+                  "from": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "description": "Volume Source",
+                        "default": ""
+                      },
+                      {
+                        "type": "object",
+                        "description": "Volume Source",
+                        "default": {}
+                      }
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "The path to be mounted on container",
+                    "default": ""
+                  },
+                  "size": {
+                    "type": "string",
+                    "description": "The size of the volume, only for 'storage' type",
+                    "default": ""
+                  },
+                  "storageClass": {
+                    "type": "string",
+                    "description": "Specify the storage provisioner, only for 'storage' type",
+                    "default": ""
+                  },
+                  "container": {
+                    "type": "string",
+                    "description": "Designate which container to be mounted",
+                    "default": ""
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "cronJobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "cron",
+              "image"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "cron": {
+                "type": "string",
+                "description": "Cron expression"
+              },
+              "image": {
+                "type": "string"
+              },
+              "commands": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "additionalItems": true
+        },
+        "permissions": {
+          "type": "array",
+          "description": "Grant permissions to call Kubernetes API server",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Kubernetes Permission Request",
+                "description": "The permission to call Kubernetes API server",
+                "default": {},
+                "required": [
+                  "resources",
+                  "verbs"
+                ],
+                "properties": {
+                  "group": {
+                    "type": "string",
+                    "description": "Resource Group",
+                    "default": ""
+                  },
+                  "resources": {
+                    "type": "string",
+                    "description": "Resources",
+                    "default": ""
+                  },
+                  "verbs": {
+                    "type": "string",
+                    "examples": [
+                      "read",
+                      "all",
+                      "read, patch",
+                      "get, list, watch, update, patch"
+                    ],
+                    "description": "Verbs, besides Kubernetes native verbs, YAM provide alias: read, all",
+                    "default": "read"
+                  },
+                  "clusterLevel": {
+                    "type": "boolean",
+                    "description": "Binding with ClusterRole or Namespaced Role",
+                    "default": false
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "forceScatterPods": {
+          "type": "boolean",
+          "description": "By default, force scattering Pods to different Nodes when replica > 1",
+          "default": true
+        },
+        "extraFiles": {
+          "type": "array",
+          "description": "Add extra native orchestration files to apply",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "File Path",
+                "default": ""
+              }
+            ]
+          }
+        },
+        "extraPatches": {
+          "type": "array",
+          "description": "Raw definitions of the  container",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "jsonPath": {
+                "type": "string"
+              },
+              "patchMode": {
+                "enum": [
+                  "merge",
+                  "replace",
+                  "append"
+                ]
+              },
+              "rawYaml": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "access": {
+      "type": "object",
+      "title": "Access Config",
+      "default": {},
+      "properties": {
+        "route": {
+          "type": "array",
+          "description": "The ingress and routing configurations.",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Application Ingress Route",
+                "description": "The ingress and routing configuration.",
+                "default": {},
+                "required": [
+                  "type",
+                  "port"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "https",
+                      "http",
+                      "tcp",
+                      "udp"
+                    ],
+                    "default": "https"
+                  },
+                  "host": {
+                    "type": "string",
+                    "description": "Hostname or domain name of the ingress",
+                    "default": ""
+                  },
+                  "cert": {
+                    "type": "string",
+                    "description": "The TLS certificate secret name for ingress TLS-offloading",
+                    "default": ""
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "container / service port",
+                    "default": 0
+                  },
+                  "ingressClass": {
+                    "type": "string",
+                    "description": "Ingress class name",
+                    "default": ""
+                  },
+                  "useLoadBalancer": {
+                    "type": "object",
+                    "description": "while load balancer mode is turned on, no ingress will be created, LoadBalancer type Kubernetes Service will be created.",
+                    "properties": {
+                      "loadBalancerAnnotations": {
+                        "type": "object"
+                      },
+                      "cidrAlowList": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "useHostPort": {
+                    "type": "object",
+                    "description": "Host port mode is highly NOT recommended.",
+                    "properties": {
+                      "from": {
+                        "type": "integer"
+                      },
+                      "to": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "useNodePort": {
+                    "type": "object",
+                    "description": "Node port mode is highly NOT recommended.",
+                    "properties": {
+                      "from": {
+                        "type": "integer"
+                      },
+                      "to": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "auth": {
+          "type": "array",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Application Authentication",
+                "description": "Describe the authentication methods for your application.",
+                "default": {},
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "jwt",
+                      "basic"
+                    ],
+                    "title": "Authentication Method",
+                    "default": "jwt"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "urlPath": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "allowList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "blockList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "audience": {
+                    "type": "string",
+                    "default": ""
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

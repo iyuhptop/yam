@@ -1,0 +1,35 @@
+{
+  "name": "@yam/plugin-deploy-core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "ncc build index.ts -o dist",
+    "gen:type": "json2ts -i application.schema.json -o application.schema.d.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Code2Life/yam.git"
+  },
+  "dependencies": {
+    "@yam/types": "workspace:^"
+  },
+  "keywords": [
+    "kubernetes",
+    "cloud-native",
+    "yam"
+  ],
+  "author": "Joey Yang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Code2Life/yam/issues"
+  },
+  "homepage": "https://github.com/Code2Life/yam#readme",
+  "devDependencies": {
+    "@kubernetes/client-node": "^0.15.1",
+    "@types/node": "^16.7.5",
+    "@vercel/ncc": "^0.30.0",
+    "json-schema-to-typescript": "^10.1.4",
+    "typescript": "^4.4.2"
+  }
+}

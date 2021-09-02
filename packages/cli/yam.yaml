@@ -1,0 +1,14 @@
+schema: application/1.0
+metadata:
+  app: some-app
+  namespace: some-team
+  description: An awesome project !
+
+prepare:
+  - type: redis
+    name: my-app-cache
+    mode: cluster
+    version: 6.0.0
+    size:
+      cpu: 1
+      memory: 128Mi

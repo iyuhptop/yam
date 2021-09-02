@@ -1,0 +1,353 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "Application Model",
+  "description": "Yet Another Application Model",
+  "default": {},
+  "properties": {
+    "observe": {
+      "type": "object",
+      "title": "The observe schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": {},
+      "required": [
+        "monitor",
+        "alert",
+        "log",
+        "trace"
+      ],
+      "properties": {
+        "monitor": {
+          "type": "object",
+          "title": "The monitor schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": {},
+          "required": [
+            "path",
+            "port",
+            "interval"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "title": "The path schema",
+              "description": "An explanation about the purpose of this instance.",
+              "default": ""
+            },
+            "port": {
+              "type": "integer",
+              "title": "The port schema",
+              "description": "An explanation about the purpose of this instance.",
+              "default": 0
+            },
+            "interval": {
+              "type": "string",
+              "title": "The interval schema",
+              "description": "An explanation about the purpose of this instance.",
+              "default": ""
+            }
+          },
+          "additionalProperties": true
+        },
+        "alert": {
+          "type": "array",
+          "title": "The alert schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "The first anyOf schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": {},
+                "required": [
+                  "when",
+                  "keep",
+                  "severity",
+                  "description"
+                ],
+                "properties": {
+                  "when": {
+                    "type": "string",
+                    "title": "The when schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "keep": {
+                    "type": "string",
+                    "title": "The keep schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "severity": {
+                    "type": "string",
+                    "title": "The severity schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "description": {
+                    "type": "string",
+                    "title": "The description schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "log": {
+          "type": "array",
+          "title": "The log schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "The first anyOf schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": {},
+                "required": [
+                  "mode",
+                  "dir",
+                  "files",
+                  "pattern",
+                  "multiLine",
+                  "topic",
+                  "rotate"
+                ],
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "title": "The mode schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "dir": {
+                    "type": "string",
+                    "title": "The dir schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "files": {
+                    "type": "array",
+                    "title": "The files schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "title": "The first anyOf schema",
+                          "description": "An explanation about the purpose of this instance.",
+                          "default": ""
+                        }
+                      ]
+                    }
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "title": "The pattern schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "multiLine": {
+                    "type": "string",
+                    "title": "The multiLine schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "topic": {
+                    "type": "string",
+                    "title": "The topic schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": ""
+                  },
+                  "rotate": {
+                    "type": "object",
+                    "title": "The rotate schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": {},
+                    "required": [
+                      "period",
+                      "files"
+                    ],
+                    "properties": {
+                      "period": {
+                        "type": "string",
+                        "title": "The period schema",
+                        "description": "An explanation about the purpose of this instance.",
+                        "default": ""
+                      },
+                      "files": {
+                        "type": "array",
+                        "title": "The files schema",
+                        "description": "An explanation about the purpose of this instance.",
+                        "default": [],
+                        "additionalItems": true,
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "title": "The first anyOf schema",
+                              "description": "An explanation about the purpose of this instance.",
+                              "default": ""
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "trace": {
+          "type": "object",
+          "title": "The trace schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": {},
+          "required": [
+            "sampling"
+          ],
+          "properties": {
+            "sampling": {
+              "type": "string",
+              "title": "The sampling schema",
+              "description": "An explanation about the purpose of this instance.",
+              "default": ""
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "scale": {
+      "type": "array",
+      "title": "The scale schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": [],
+      "additionalItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "title": "The first anyOf schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": {},
+            "required": [
+              "type",
+              "trigger",
+              "threshold",
+              "keepAtLeast",
+              "max",
+              "min"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "The type schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "trigger": {
+                "type": "string",
+                "title": "The trigger schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "threshold": {
+                "type": "string",
+                "title": "The threshold schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "keepAtLeast": {
+                "type": "string",
+                "title": "The keepAtLeast schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "max": {
+                "type": "integer",
+                "title": "The max schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": 0
+              },
+              "min": {
+                "type": "integer",
+                "title": "The min schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": 0
+              }
+            },
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "title": "The second anyOf schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": {},
+            "required": [
+              "type",
+              "trigger",
+              "scaleTo",
+              "after",
+              "thenScaleTo",
+              "timezone"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "The type schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "trigger": {
+                "type": "string",
+                "title": "The trigger schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "scaleTo": {
+                "type": "integer",
+                "title": "The scaleTo schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": 0
+              },
+              "after": {
+                "type": "string",
+                "title": "The after schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              },
+              "thenScaleTo": {
+                "type": "integer",
+                "title": "The thenScaleTo schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": 0
+              },
+              "timezone": {
+                "type": "string",
+                "title": "The timezone schema",
+                "description": "An explanation about the purpose of this instance.",
+                "default": ""
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      }
+    }
+  }
+}

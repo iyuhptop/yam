@@ -1,0 +1,224 @@
+schema: application/1.0
+metadata:
+  app: some-app
+  namespace: some-team
+  description: An awesome project !
+
+prepare:
+  - type: redis
+    name: my-app-cache
+    mode: cluster
+    version: 6.0.0
+    size:
+      cpu: 1
+      memory: 128Mi
+
+config:
+  - type: configMap
+    name: my-config
+    mount: /path/to/config
+    from:
+      - app-config/app.config.yaml
+    container: main
+
+deploy:
+  type: Deployment
+
+  version: 1.0.0
+
+  imageRepo: "domain.corp.com/your-team/your-app"
+
+  s: regcred, ecr-cred
+
+  commands: []
+
+  port: 8080
+
+  replica: 2
+
+  resource:
+    cpu:
+      requests: 1
+      limits: 2500m
+
+    memory:
+      requests: 512m
+      limits: 1G
+
+    gpu:
+      requests: 1
+      limits: 2
+
+  healthCheck:
+    enable: true
+    url: /health
+    port: 8080
+    interval: 5s
+    onFailure:
+      - times: 3
+        action: disconnect
+      - times: 12
+        action: restart
+
+  nodeSelector: label1=value1, label2=value2, label3
+
+  env:
+    - name: JAVA_OPTS
+      value: ""
+    - name: MY_NODE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+
+  # split configMap and deployment and service, keep latest 2 versions
+  canaryMode: true
+
+  lifecycleHook:
+    afterStart: ["/bin/sh", "-c", "pwd"]
+    beforeTerminate:
+      [
+        "/bin/sh",
+        "-c",
+        "/usr/bin/curl -X POST 'http://127.0.0.1:8080/suspend' | xargs sleep",
+      ]
+
+  sidecars:
+    - name: nginx
+      initContainer: false
+      raw:
+        image: nginx
+        readinessProbe:
+        httpGet:
+          path: /healthcheck
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 120
+        timeoutSeconds: 15
+        periodSeconds: 15
+        successThreshold: 1
+        failureThreshold: 3
+
+  mounts:
+    - type: emptyDir
+      name: temp-write-dir
+      path: /tmp/my-tmp-data-dir
+      container: nginx
+
+    - type: storage
+      name: data-dir
+      path: /data
+      size: 100G
+      storageClass: gp2
+      container: main
+
+  permissions:
+    - group: "" # networking.k8s.io
+      resources: endpoints,pods
+      verbs: get,list,watch
+      clusterLevel: false
+
+  forceScatterPods: true
+
+  extraFiles:
+    - path/to/some/file.yaml
+
+access:
+  route:
+    - type: https
+      host: some-domain.corp.com
+      cert: my-cert
+      port: 8080
+      ingressClass: traefik
+
+    - type: tcp
+      port: 3306
+      exposePort: 31306
+      loadBalancer:
+        enable: true
+
+  auth:
+    - type: jwt
+      issuer: some-app
+      audience: my-app
+      urlPath: "/my-app/**"
+      allowList:
+        - "/login"
+      blockList:
+        - "/suspend"
+
+  # protect:
+  #   - type: rateLimit
+  #     urlPath: "/**"
+  #     maxRate: 1000
+  #     period: 1s
+  
+  # other gateway features: canary / faultInject / mirror / IP allow-block / etc.
+
+observe:
+  # prometheus stack integration
+  monitor:
+    path: /metrics
+    port: 8080
+    interval: 30s
+
+  alert:
+    - when: absent(process_uptime_seconds{service="your-app"})
+      keep: 5s
+      severity: critical
+      description: "Service Unavailable !"
+
+  log:
+    - mode: file # or std
+      dir: /tmp/logs
+      files:
+        - debug.log
+        - error.log
+      pattern: json # or grok pattern
+      multiLine: regex
+      topic: my_app_log_kafka_topic
+      rotate:
+        period: daily # or 5d 2w
+        files:
+          - debug-*.log
+          - archive/*.log
+
+  trace:
+    sampling: 5%
+
+scale:
+  - type: metrics
+    trigger: cpu
+    threshold: 60%
+    keepAtLeast: 1h
+    max: 10
+    min: 2
+  - type: cron
+    trigger: "0 7 * * 1,2,3,4,5" # or UTC time
+    scaleTo: 4
+    after: 4h
+    thenScaleTo: 2
+    timezone: auto
+
+
+
+
+# ```yaml
+# .values/params.yaml
+sampling.rate:
+  default: 3%
+  dev: 100% # equivalent to dev:dev
+  staging: 50%
+
+  # default value for all context with this tag
+  prod: 5%
+  prod:canary: 5%
+
+  # tagging, will lookup context prod:us context
+  prod:us-east-1: 4%
+  prod:eu-central-1: 0%
+  prod:ap-south-1: 2%
+  # prod:others will use 'prod' value
+
+# .values/app.config.yaml
+my-app-configs: values
+# ```

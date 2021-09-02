@@ -1,0 +1,30 @@
+{
+  "name": "@yam/types",
+  "version": "1.0.0",
+  "main": "index.d.ts",
+  "description": "Yet Another Application Model - a simpler way to run your app on kubernetes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Code2Life/yam.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "cloud-native",
+    "yam",
+    "pulumi",
+    "helm",
+    "OAM"
+  ],
+  "author": "Joey Yang",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Code2Life/yam/issues"
+  },
+  "homepage": "https://github.com/Code2Life/yam#readme",
+  "devDependencies": {
+    "@kubernetes/client-node": "^0.15.1",
+    "@types/pino": "^6.3.11",
+    "axios": "^0.21.1",
+    "lodash": "^4.17.21"
+  }
+}

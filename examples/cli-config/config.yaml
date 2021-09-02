@@ -1,0 +1,44 @@
+# file mod 600
+# buying licence
+server:
+  url: https://yam.plus
+  appKey: xxx
+
+client:
+  kubeConfig: ~/.kube/config
+  contextMapping:
+    prod:us-east-1: 
+      file: ~/.kube/config
+      context: some-context-name-in-kube-config # or default context
+  telemetry: false
+  lockType: none # or cloud, or k8s
+
+# variables shared through all stages and steps, do not put secrets here
+variables:
+  imageRepoBase: 
+    domain: harbor.your-corp.com
+    useForAllContainers: false
+  serviceMonitorLabels: 
+    release: prometheus
+  alertRuleLabels:
+    release: prometheus
+
+plugins:
+  # if server side enabled, will auto download plugins from server side
+  - package: "mysql-provisioner:1.0.0"
+    # url: yam.plus/user-space/tidb-provisioner:1.0.0" for private plugins
+    applyTo: application
+
+  - package: "terraform-operator:1.0.0"
+    applyTo: application, web-service
+    env:
+      AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_KEY}
+      AWS_DEFAULT_REGION: us-east-1
+  
+  - package: "redis-provisioner:1.0.0"
+    enable: false
+
+  - package: "helm-operator:1.0.0"
+
+  - package: "pulumi-operator:1.0.0"

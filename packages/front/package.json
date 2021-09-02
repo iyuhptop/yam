@@ -1,0 +1,28 @@
+{
+  "name": "@yam/front",
+  "version": "1.0.0",
+  "main": "main.ts",
+  "scripts": {
+    "compile": "tsc",
+    "pack": "ncc build main.ts -o dist"
+  },
+  "description": "Yet Another Application Model - a simpler way to run your app on kubernetes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Code2Life/yam.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "cloud-native",
+    "yam",
+    "pulumi",
+    "helm",
+    "OAM"
+  ],
+  "author": "Joey Yang",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Code2Life/yam/issues"
+  },
+  "homepage": "https://github.com/Code2Life/yam#readme"
+}
