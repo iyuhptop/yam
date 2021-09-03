@@ -1,3 +1,5 @@
+import { OperatorMode } from "@yam/types"
+
 export interface KubernetesEnvironment {
   /**
    * name is unique for each kubernetes cluster, including stack name, eg: prod:us-east-1, dev:us-west-1
@@ -85,7 +87,7 @@ export interface OperatorParam {
   /**
    * Pure Plan Mode, just generate binary plan and persist
    */
-  onlyPlan: boolean
+  runMode: OperatorMode
 
   /**
    * If planned in advance, plan file could be specified in Apply stage
@@ -126,10 +128,12 @@ export type ClientConfig = {
   kubeConfig: string
   contextMapping: Map<string, string>
   telemetry: boolean
-  lockType: ApplyLockType
+  lockType: StateLockType
+  planStoreType: PlanFileStoreType
 }
 
-export type ApplyLockType = 'none' | 'k8s' | 'cloud'
+export type StateLockType = 'none' | 'k8s' | 'cloud'
+export type PlanFileStoreType = 'local-file' | 'cloud' | 'hybrid'
 
 /**
  * YAM.plus server configurations

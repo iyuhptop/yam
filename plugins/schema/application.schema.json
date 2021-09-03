@@ -796,7 +796,7 @@
         "forceScatterPods": {
           "type": "boolean",
           "description": "By default, force scattering Pods to different Nodes when replica > 1",
-          "default": true
+          "default": false
         },
         "extraFiles": {
           "type": "array",

@@ -72,21 +72,27 @@ Apply Stage:
 
 YAM is INSPIRED from OAM, while the implementation is Totally different from OAM runtime KubeVela or CrossPlane.
 
+: JSON Schema + TypeScript !
+
+YAM introduce two level environment definition: 'stack:envTag', while engTag is optional, cluster level dynamic values could be inherited from stack level, designed for large scale and multiple region deployment
+
 Both are built for separation of concerns, both are app centric.
 - Platform Engineer: how to provide an easy to use, scalable, stable, secure, cloud native platform?
 - Dev: how to run, access, observe my app ?
 - Ops: how to operate the app ?
 
-Dev and Ops DO NOT want to learn every field meaning of K8S Resources and so many CRDs!
+Dev and Ops DO NOT want to learn every field meaning of K8S Resources and so many CRDs !
 
 Differences:
 - OAM is trait and workflow focused, while YAM is operation lifecycle focused. fill a few fields, then, it just works !
-- OAM runtime KubeVela use Cuelang to define and validate the model, while YAM use json schema + TypeScript handler
+- OAM runtime KubeVela use Cuelang to define and validate the model, while YAM YAM glued plugins together in another programmable approach, use JSON Schema + TypeScript Functions. Yaml -> JSON Schema -> TypeScript Types
 - OAM needs extra kubernetes CRD and runtime, YAM is a lightweight tool, on-prem or cloud console is optional
 - YAM has a more flexible way of managing environment related parameters or variables.
-- YAM is written by Node.js
+- YAM is written by Node.js, release as npm package / single binary, lightweight, and, Totally Non-intrusive !
 - YAM leverages existing languages: TypeScript for Platform Engineer, Yaml for Application Developer/Operator
-- YAM leverages existing DevOps tech stack Holistically: Terraform/Pulumi/Helm/CRD Operators/..., could be easily integrated to ANY CI/CD system
+- YAM leverages existing DevOps tech stack Holistically: Terraform/Pulumi/Helm/CRD Operators/..., could be easily integrated to ANY CI/CD system, also some KubeVela & CrossPlane components, like cloud providers, terraform controller
+- YAM split operation workflow to two stages, plan & apply (inspired from terraform), also support direct apply mode.
+- YAM has could send HTTP requests (and do anything you want) in plugins, make it easily integrating with other infrastructures, not only composing YAMLs.
 
 # YAM is:
 - From platform engineer perspective, it links IaaS(Terraform), Kubernetes CRD Operators, Helm Charts, Project Management Systems, ... all stuff, with the Application, defining a standardized workflow of Operating Cloud Services, expose it throw Streamlined, Concise, Extensible, Holistic Models

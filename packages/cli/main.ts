@@ -1,5 +1,3 @@
-import {Action, Operator } from '@yam/types'
-
 // cli implementation
 // features:
 //   manage parameters

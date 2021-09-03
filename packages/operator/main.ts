@@ -1,73 +1,102 @@
-import { IApplicationModel } from '@yam/types'
-import axios from 'axios'
+import { IApplicationModel, KV } from '@yam/types'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
 import * as path from 'path'
 import { APP_MODEL_FILES, YAM_PREFIX } from './constants'
 import YamApplyContext from './context/apply'
 import YamEngine from './engine'
-import PluginSchemaHandler from './engine/schema'
+import YamPluginComposer, { MergedHandler } from './engine/composer'
 import KubernetesOperatorClient from './kube/kube-client'
 import TemplateRender from './template/render'
-import type { OperatorParam } from './types'
+import type { KubernetesEnvironment, OperatorParam } from './types'
 import { createLogger } from './util'
 
 /**
- * MainOperator is the core implement of YAM engine
+ * MainOperator implements the major workflow of YAM runtime
  */
 export class MainOperator {
 
-  private log = createLogger('main')
+  private yamEngine: YamEngine
+
   private templateRender = new TemplateRender()
   private kubeClient: KubernetesOperatorClient
-  private pluginSchemaHandler = new PluginSchemaHandler()
-  private yamEngine = new YamEngine(this.templateRender)
+  private pluginComposer = new YamPluginComposer()
 
-  async operate(param: OperatorParam) {
+  private jsonSchema: unknown
+  private handlers: MergedHandler[]
+
+  private log = createLogger('main')
+
+  /**
+   * The core operation process, cli will build parameters and call operate method
+   */
+  public async operate(param: OperatorParam): Promise<void> {
     if (param.clusters.length === 0) {
       this.log.info('you are using the most secure way -- deploy nowhere')
       return
     }
+    this.yamEngine = new YamEngine(this.templateRender, param)
     this.log.info('start operation process')
 
-    // 1. read YAM definition
+    // a. read YAM definition
     const yamPath = this.checkApplicationModelPath(param.workingDir)
     const yamObj = await this.templateRender.loadYaml(param.workingDir, yamPath) as IApplicationModel
     if (!yamObj || !yamObj.schema) {
       throw new Error('can not resolve "schema" filed in YAM file')
     }
 
-    // 2. merge plugin schema to build final json schema
-    const { jsonSchema, handlers } = await this.pluginSchemaHandler.buildSchemaAndHandlers(param.engine.plugins, param.workingDir, yamObj)
+    // b. merge plugin schema to build final json schema
+    const schemaHandlers = await this.pluginComposer.compose(param.engine.plugins, param.workingDir, yamObj)
+    this.jsonSchema = schemaHandlers.jsonSchema
+    this.handlers = schemaHandlers.handlers
 
-    // 3. read dynamic values from 'values/' directory
+    // c. read dynamic values from 'values/' directory
     const customizedValues = await this.templateRender.readCustomizedValues(param.workingDir, param.cmdParams, param.clusters, yamObj)
 
-    // 4. initialize kubernetes client
+    // d. initialize kubernetes client
     this.kubeClient = await KubernetesOperatorClient.create(param.clusters)
 
-    // 5. plan and apply one by one
+    // e. plan and apply one by one
     for (const cluster of param.clusters) {
-
-      // 5.a. render current model and find previous model
       const customizedVal = customizedValues.get(cluster.name) || {}
-      const current = await this.templateRender.renderTemplate(param.workingDir, yamPath, true, customizedVal)
-      const previousMap = await this.kubeClient.getConfig({ name: YAM_PREFIX + yamObj.metadata.app })
-      const currentYam = yaml.load(current) as IApplicationModel
-      const previousYam = previousMap[yamPath] ?
-        (yaml.load(previousMap[yamPath]) as IApplicationModel) : { schema: currentYam.schema, metadata: currentYam.metadata }
-
-      // 5.b. star Plan stage, pass the YAM data, and final merged json schema and operation handlers
-      const planCtx = await this.yamEngine.plan(param, previousYam, currentYam, jsonSchema, handlers, cluster, customizedVal)
-
-      // 5.c. start Apply Stage
-      if (!param.onlyPlan) {
-        const executeCtx = new YamApplyContext(this.kubeClient, axios, param.dryRunMode)
-        await this.yamEngine.apply(param, planCtx, executeCtx)
-      }
+      await this.planApply(param, cluster, customizedVal)
     }
   }
 
+  /**
+   * Plan-Apply is the abstraction of an operation process, by different CLI command, engine runs in different mode
+   * plan-only  mode: "yam plan -v -c ..."
+   * apply-only mode: "yam apply -f <file|url>"
+   * plan-apply mode: "yam apply -version --clusters ..."
+   * 
+   * NOTE: running in 'apply-only' mode will still execute plan stage functions, but using the binary plan file and no-prompt.
+   */
+  private async planApply(param: OperatorParam, cluster: KubernetesEnvironment, customizedVal: KV): Promise<void> {
+    // a. render current application model
+    const yamPath = this.checkApplicationModelPath(param.workingDir)
+    const current = await this.templateRender.renderTemplate(param.workingDir, yamPath, true, customizedVal)
+    const currentYam = yaml.load(current) as IApplicationModel
+
+    // b. find previous application model
+    const previousMap = await this.kubeClient.getConfig({ name: YAM_PREFIX + currentYam.metadata.app })
+    let previousYam = { schema: currentYam.schema, metadata: currentYam.metadata }
+    if (previousMap[yamPath]) {
+      previousYam = yaml.load(previousMap[yamPath]) as IApplicationModel
+    }
+
+    // c. star Plan stage, pass the YAM data, and final merged json schema and operation handlers
+    const planCtx = await this.yamEngine.plan(previousYam, currentYam, this.jsonSchema, this.handlers, cluster, customizedVal)
+
+    // d. start Apply Stage
+    if (param.runMode !== "plan-only") {
+      const executeCtx = new YamApplyContext(this.kubeClient, param.dryRunMode)
+      await this.yamEngine.apply(param, planCtx, executeCtx)
+    }
+  }
+
+  /**
+   * Checking if 'app.yaml, yam.yaml' like files exists
+   */
   private checkApplicationModelPath(workDir: string) {
     for (const name of APP_MODEL_FILES) {
       if (fs.existsSync(path.join(workDir, name))) {

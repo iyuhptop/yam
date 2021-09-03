@@ -1,7 +1,7 @@
-import { KVString, PlanContext } from "@yam/types"
+import { KVString, OperateFunction } from "@yam/types"
 import { Configuration } from "../../application.schema.d"
 
-export default async (plan: PlanContext, params: Configuration) => {
+const configOperator: OperateFunction = async (plan, params: Configuration, diff) => {
   if (!params.from) {
     return
   }
@@ -27,3 +27,5 @@ export default async (plan: PlanContext, params: Configuration) => {
     })
   })
 }
+
+export default configOperator

@@ -1,11 +1,14 @@
-import { ApiType, KubernetesObject, V1PodList } from "@kubernetes/client-node";
+import { ApiType, KubernetesObject, V1PodList } from "@kubernetes/client-node"
 import {
   ApiConstructor, ConfigData, FetchLogParam, ForwardParam, ForwardResult,
   JobParam, K8SResourceMeta, KubernetesOperator, KV, KVString, WorkloadStatus
-} from "@yam/types";
-import { KubernetesEnvironment } from "../types";
-import { createLogger } from "../util";
+} from "@yam/types"
+import { KubernetesEnvironment } from "../types"
+import { createLogger } from "../util"
 
+/**
+ * Provide common methods to control multiple Kubernetes cluster
+ */
 export default class KubernetesOperatorClient implements KubernetesOperator {
 
   private kubeConfig

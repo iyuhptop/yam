@@ -1,7 +1,7 @@
-import type { AxiosRequestConfig, AxiosResponse, AxiosInstance } from "axios"
-import type { CoreV1Event, V1ContainerStatus, V1JobSpec, V1PodList, KubernetesObject, ApiType } from "@kubernetes/client-node"
-import type { Logger } from "pino"
+import type { ApiType, CoreV1Event, KubernetesObject, V1ContainerStatus, V1JobSpec, V1PodList } from "@kubernetes/client-node"
+import type { AxiosRequestConfig, AxiosResponse } from "axios"
 import type { LoDashStatic } from 'lodash'
+import type { Logger } from "pino"
 
 export type KV = {
   [key: string]: unknown
@@ -57,7 +57,7 @@ export interface PlanContext {
    * prompt user to input customized variables in Plan stage,
    * while running in Apply stage, it will use default value or planned value.
    */
-  prompt: <T> (text: string, defaultVal: T) => Promise<T>
+  prompt: <T> (variableName: string, text: string, defaultVal: T) => Promise<T>
 
   /**
    * read files of YAM directory relative path, handle yaml includes and replace placeholders with values
@@ -71,8 +71,6 @@ export interface PlanContext {
 export type PlanContextData = {
   actions: Action[]
 
-  allDiffResults: DiffResult[]
-
   customizedValues: KV
 
   currentModelFull: IApplicationModel
@@ -83,7 +81,11 @@ export type PlanContextData = {
   workingDir: string
   stackName: string
   environmentName: string
+
+  runMode: OperatorMode
 }
+
+export type OperatorMode = 'plan-only' | 'apply-only' | 'plan-apply'
 
 /**
  * In execute stage, all available actions are defined in ExecuteContext,
@@ -113,11 +115,6 @@ export interface ExecuteContext {
    * K8S Client, contains a set of pre-defined operations.
    */
   k8sClient: KubernetesOperator
-
-  /**
-   * Shared axios instance
-   */
-  httpClient: AxiosInstance
 
   /**
    * Managed resources are KubernetesObject that will be applied to Cluster one by one.
@@ -237,7 +234,7 @@ export type Action = (ctx: ExecuteContext) => Promise<void>
 /**
  * OperateFunction and Operator is a common interface for implementing YAM handlers.
  */
-export type OperateFunction = (plan: PlanContext, params: unknown, diff: DiffResult[]) => Promise<void>
+export type OperateFunction = (plan: PlanContext, params: unknown, diff: DiffResult) => Promise<void>
 
 export interface Operator {
   operate: OperateFunction

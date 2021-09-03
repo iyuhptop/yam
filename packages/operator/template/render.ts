@@ -100,9 +100,7 @@ export default class TemplateRender {
           const envSpecificVal = result.get(env) as KV
           for (const paramName in stackDefaultVal) {
             // set default value for each env
-            if (!envSpecificVal.hasOwnProperty(paramName)) {
-              envSpecificVal[paramName] = stackDefaultVal[paramName]
-            }
+            envSpecificVal[paramName] = stackDefaultVal[paramName]
           }
         })
       }
@@ -127,7 +125,7 @@ export default class TemplateRender {
     return this.resolvePlaceHolders(str, isYaml, customizedValues)
   }
 
-  public async loadYaml(workDir: string, filepath: string) {
+  public async loadYaml(workDir: string, filepath: string): Promise<unknown> {
     const str = await this.checkAndReadFile(workDir, filepath)
     return yaml.load(str)
   }
@@ -138,7 +136,7 @@ export default class TemplateRender {
       return rawParameters
     }
     const valueFiles = await fs.readdir(valuesDir)
-    for (let file of valueFiles) {
+    for (const file of valueFiles) {
       const tmp = path.join(valuesDir, file)
       // recursively scan values/ directory and sub directories
       if (fs.statSync(tmp).isDirectory()) {
@@ -186,23 +184,21 @@ export default class TemplateRender {
     }
     if (typeof obj === "object") {
       for (const prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          const value = obj[prop]
-          // check and replace property values of the object
-          if (typeof value === "string") {
-            const { exactlyMatch, match } = this.containsPlaceHolder(value)
-            if (match) {
-              this.renderObjectProperty(obj, prop, false, exactlyMatch, params)
-            }
-          } else if (typeof value === "object") {
-            this.walkObject(value as KV, params)
-          }
-
-          // finish values check, now check property name itself
-          const { exactlyMatch, match } = this.containsPlaceHolder(prop)
+        const value = obj[prop]
+        // check and replace property values of the object
+        if (typeof value === "string") {
+          const { exactlyMatch, match } = this.containsPlaceHolder(value)
           if (match) {
-            this.renderObjectProperty(obj, prop, true, exactlyMatch, params)
+            this.renderObjectProperty(obj, prop, false, exactlyMatch, params)
           }
+        } else if (typeof value === "object") {
+          this.walkObject(value as KV, params)
+        }
+
+        // finish values check, now check property name itself
+        const { exactlyMatch, match } = this.containsPlaceHolder(prop)
+        if (match) {
+          this.renderObjectProperty(obj, prop, true, exactlyMatch, params)
         }
       }
     }
@@ -269,7 +265,7 @@ export default class TemplateRender {
     const objKV = (obj as KV)
     if (isProp) {
       const value = objKV[propName]
-      const newPropName = this.renderVariableStr(propName, values);
+      const newPropName = this.renderVariableStr(propName, values)
       objKV[newPropName] = value
       delete objKV[propName]
     } else {
@@ -278,7 +274,7 @@ export default class TemplateRender {
         if (matchResult == null) {
           return
         }
-        let defaultVal = matchResult.length === 3 ? matchResult[2] : undefined
+        const defaultVal = matchResult.length === 3 ? matchResult[2] : undefined
         const replacedVal = values[matchResult[1]] || defaultVal
         if (replacedVal === undefined) {
           this.log.warn(`value of parameter ${propName} is not specified, attribute will be removed`)
@@ -298,7 +294,7 @@ export default class TemplateRender {
     let idx = 0
     let finalStr = ''
     while ((matchResult = templateMatcher.exec(str)) != null) {
-      let defaultVal = matchResult.length === 3 ? matchResult[2] : ''
+      const defaultVal = matchResult.length === 3 ? matchResult[2] : ''
       finalStr += str.substring(idx, matchResult.index) + (values[matchResult[1]] as string || defaultVal).toString()
       idx += matchResult[0].length
     }

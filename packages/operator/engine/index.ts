@@ -2,60 +2,68 @@ import type { DiffResult, ExecuteContext, IApplicationModel, KV, PlanContext, Pl
 import YamPlanContext from '../context/plan'
 import TemplateRender from '../template/render'
 import type { KubernetesEnvironment, OperatorParam } from '../types'
-import Locker from './locker'
-import { MergedHandler } from './schema'
-import Store from './store'
+import { createLogger, normalizeJsonPath } from '../util'
+import YamStateLocker from './locker'
+import { MergedHandler } from './composer'
+import YamStateStore from './store'
+import { JSONPath } from 'jsonpath-plus'
+import ajv from 'ajv'
 
+/**
+ * YAM engine core, implement Plan & Apply process
+ */
 export default class YamEngine {
 
-  private templateRender
-  private locker = new Locker()
-  private store = new Store()
+  private templateRender: TemplateRender
+  private operatorParam: OperatorParam
+  private store: YamStateStore
+  private locker: YamStateLocker
 
-  constructor(templateRender: TemplateRender) {
+  private log = createLogger("yam-engine")
+
+  constructor(templateRender: TemplateRender, operatorParam: OperatorParam) {
     this.templateRender = templateRender
+    this.operatorParam = operatorParam
+    this.store = new YamStateStore(operatorParam)
+    this.locker = new YamStateLocker(operatorParam)
   }
 
   /**
-   * Plan Stage
+   * Plan Stage, calculate diff and apply each operation handler of plugins if JSON path matched
    */
   public async plan(
-    param: OperatorParam, prev: IApplicationModel, current: IApplicationModel, jsonSchema: unknown,
+    prev: IApplicationModel, current: IApplicationModel, jsonSchema: unknown,
     handlers: MergedHandler[], cluster: KubernetesEnvironment, customizedValues: KV
   ): Promise<YamPlanContext> {
     // YAM data validation with final json schema
+    this.validateJsonSchema(current, jsonSchema)
 
-    // calculate diff TODO
-    const jsonDiff: DiffResult[] = []
-
-    // build run context
+    // create Plan stage context instance
     const planContextData: PlanContextData = {
       actions: [],
-
-      allDiffResults: jsonDiff,
       currentModelFull: current,
       previousModelFull: prev,
-
-      // All merged dynamic parameters for template rendering
+      // dynamic parameters for template rendering
       customizedValues,
-
-      variables: param.engine.variables,
-
-      workingDir: param.workingDir,
+      // configured default variabled and prompted variables
+      variables: this.operatorParam.engine.variables,
+      workingDir: this.operatorParam.workingDir,
       stackName: cluster.stack,
       environmentName: cluster.name,
+      runMode: this.operatorParam.runMode
     }
-    // walk object
-    const WALK_OBJ_ROOT = ''
-    const planContext = new YamPlanContext(this.templateRender, planContextData)
-    await this.walkObjectAndPlan(planContext, current, WALK_OBJ_ROOT, handlers)
 
-    // TODO, record prompt selections to variables, persist plan to binary
+    // query by each JSON path defined in plugins, call coresponding operate functions
+    const planContext = new YamPlanContext(this.templateRender, planContextData)
+    await this.matchJsonPathAndCallOperate(planContext, handlers)
+
+    // store the planned binary file to local or/and cloud
+    await this.store.persistPlan(planContext)
     return planContext
   }
 
   /**
-   * Apply Stage
+   * Apply Stage, lock and call actions
    */
   public async apply(param: OperatorParam, planCtx: PlanContext, executeCtx: ExecuteContext): Promise<void> {
     const lockObj = await this.locker.lock(param)
@@ -65,27 +73,38 @@ export default class YamEngine {
       }
     } finally {
       await this.locker.unlock(param, lockObj)
-      await this.store.storeResult(param)
+      await this.store.storeResult()
     }
   }
 
-  private async walkObjectAndPlan(planCtx: YamPlanContext, current: KV, jsonPath: string, handlers: MergedHandler[]) {
+  private async matchJsonPathAndCallOperate(planCtx: YamPlanContext, jsonPathHandlers: MergedHandler[]) {
+    for (const matchedHandler of jsonPathHandlers) {
+      const jsonPath = normalizeJsonPath(matchedHandler.matcher)
+      const partialCurrent = JSONPath({ path: jsonPath, json: planCtx.data.currentModelFull })
+      const partialPrevious = JSONPath({ path: jsonPath, json: planCtx.data.previousModelFull })
+      this.log.debug(`fetch JSON path: ${jsonPath}`, partialCurrent, partialPrevious)
+
+      // calculate diff, allow lazy
+      const diff = this.jsonDiff(partialPrevious, partialCurrent)
+
+      // call operate function of all plugins to compose the plan stage
+      for (const operateFunction of matchedHandler.handlers) {
+        this.log.info(`planning operations, by: ${operateFunction.pluginName}`)
+        await operateFunction.func(planCtx, partialCurrent, diff)
+        this.log.info(`plan stage complete for ${operateFunction.pluginName}, total actions: ${planCtx.data.actions.length}.`)
+      }
+    }
+  }
+
+  private validateJsonSchema(current: IApplicationModel, jsonSchema: unknown): void {
     // TODO
-    for (const key in current) {
-      const tmpJsonPath = jsonPath + '.' + key
-      const matched = handlers.find((h) => h.matcher === tmpJsonPath)
-      if (matched) {
-        for (const handler of matched.handlers) {
-          planCtx.log.info(`start planning: ${handler.pluginName} for declarations on: ${tmpJsonPath}`)
-        }
-      }
-
-      const isArr = current[key] instanceof Array
-      if (isArr) {
-        // TODO
-      } else if (typeof current[key] === "object") {
-        await this.walkObjectAndPlan(planCtx, current[key] as KV, tmpJsonPath, handlers)
-      }
-    }
+    throw new Error('Method not implemented.')
   }
+
+
+  private jsonDiff(prev: unknown, current: unknown): DiffResult {
+    // todo
+    return {} as DiffResult
+  }
+
 }
