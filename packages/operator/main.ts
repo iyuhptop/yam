@@ -1,4 +1,4 @@
-import { IApplicationModel, KV } from '@yam/types'
+import { IApplicationModel, KV, KVString } from '@yam/types'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
 import * as path from 'path'
@@ -36,7 +36,7 @@ export class MainOperator {
       return
     }
     this.yamEngine = new YamEngine(this.templateRender, param)
-    this.log.info('start operation process')
+    this.log.info('operation process started...')
 
     // a. read YAM definition
     const yamPath = this.checkApplicationModelPath(param.workingDir)
@@ -44,6 +44,7 @@ export class MainOperator {
     if (!yamObj || !yamObj.schema) {
       throw new Error('can not resolve "schema" filed in YAM file')
     }
+    this.log.info(`plan to sync operation model for component: ${yamObj.metadata.namespace}/${yamObj.metadata.app}`)
 
     // b. merge plugin schema to build final json schema
     const schemaHandlers = await this.pluginComposer.compose(param.engine.plugins, param.workingDir, yamObj)
@@ -58,9 +59,12 @@ export class MainOperator {
 
     // e. plan and apply one by one
     for (const cluster of param.clusters) {
+      this.kubeClient.setCurrentContext(cluster)
       const customizedVal = customizedValues.get(cluster.name) || {}
+      this.log.info(`processing environment [${cluster.envTag}] of stack [${cluster.stack}], got ${Object.keys(customizedVal)} dynamic parameters.`)
       await this.planApply(param, cluster, customizedVal)
     }
+    this.log.info('operation process finished.')
   }
 
   /**
@@ -69,18 +73,25 @@ export class MainOperator {
    * apply-only mode: "yam apply -f <file|url>"
    * plan-apply mode: "yam apply -version --clusters ..."
    * 
-   * NOTE: running in 'apply-only' mode will still execute plan stage functions, but using the binary plan file and no-prompt.
+   * NOTE: running in 'apply-only' mode will still execute plan stage functions, but using the binary plan file.
    */
   private async planApply(param: OperatorParam, cluster: KubernetesEnvironment, customizedVal: KV): Promise<void> {
     // a. render current application model
     const yamPath = this.checkApplicationModelPath(param.workingDir)
     const current = await this.templateRender.renderTemplate(param.workingDir, yamPath, true, customizedVal)
     const currentYam = yaml.load(current) as IApplicationModel
+    this.log.info(`application model of [${currentYam.metadata.namespace}/${currentYam.metadata.app}] rendered with dynamic parameters.`)
 
     // b. find previous application model
-    const previousMap = await this.kubeClient.getConfig({ name: YAM_PREFIX + currentYam.metadata.app })
+    let previousMap = {} as KVString
+    if (!param.noDiff) {
+      previousMap = await this.kubeClient.getConfig({ name: YAM_PREFIX + currentYam.metadata.app })
+    } else {
+      this.log.info(`running in no-diff mode, will replay all actions.`)
+    }
     let previousYam = { schema: currentYam.schema, metadata: currentYam.metadata }
     if (previousMap[yamPath]) {
+      this.log.info('previous application model fetched')
       previousYam = yaml.load(previousMap[yamPath]) as IApplicationModel
     }
 

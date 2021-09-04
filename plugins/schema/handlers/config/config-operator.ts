@@ -1,7 +1,7 @@
 import { KVString, OperateFunction } from "@yam/types"
 import { Configuration } from "../../application.schema.d"
 
-const configOperator: OperateFunction = async (plan, params: Configuration, diff) => {
+const configOperator: OperateFunction<Configuration> = async (plan, params, diff) => {
   if (!params.from) {
     return
   }

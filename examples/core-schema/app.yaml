@@ -151,7 +151,6 @@ access:
   #     urlPath: "/**"
   #     maxRate: 1000
   #     period: 1s
-  
   # other gateway features: canary / faultInject / mirror / IP allow-block / etc.
 
 observe:
@@ -198,9 +197,6 @@ scale:
     after: 4h
     thenScaleTo: 2
     timezone: auto
-
-
-
 
 # ```yaml
 # .values/params.yaml

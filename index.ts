@@ -5,7 +5,6 @@
 // addon:
 // function operate(plan , diff, allDiff, allYam) {
 //    plan.appendAction()
-//    plan.prompt(type, "prompt text", "default data", function(prompt-data) {})
 // }
 
 // action (context) { context.kubeClient }

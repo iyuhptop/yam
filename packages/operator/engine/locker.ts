@@ -18,6 +18,7 @@ export default class YamStateLocker {
       this.log.warn('no lock mode may cause inconsistance when operating concurrently.')
       return
     }
+    this.log.info(`locking`)
 
     if (this.lockType === "k8s") {
       // create a temp configMap as locker
@@ -25,10 +26,12 @@ export default class YamStateLocker {
       // use yam.plus as distributed lock for each application/tenant 
       // (lock level could be set to tenant/team/app level on cloud, or lock when some JIRA issue not approved, to implement operation control)
     }
+    this.log.info(`locked`)
   }
 
   async unlock(param: OperatorParam, lockObj: unknown) {
     // TODO
+    this.log.info(`unlocked`)
   }
 
 }

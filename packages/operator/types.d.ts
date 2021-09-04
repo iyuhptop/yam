@@ -1,4 +1,4 @@
-import { OperatorMode } from "@yam/types"
+import type { KV, OperatorMode } from "@yam/types"
 
 export interface KubernetesEnvironment {
   /**
@@ -26,11 +26,6 @@ export interface KubernetesEnvironment {
    */
   kubeConfContextName: string
 }
-
-/**
- * Variables in YAM config file
- */
-export type ContextVariables = Map<string, unknown>
 
 /**
  * Command line parameters, the highest priority
@@ -69,7 +64,7 @@ export interface YamPlugin {
   enable: boolean
 
   /**
-   * No need to download or change require dir for built-in core plugins 
+   * built-in plugins release with YAM binary and npm packages
    */
   builtIn: boolean
 }
@@ -101,6 +96,11 @@ export interface OperatorParam {
    */
   dryRunMode: boolean
 
+  /**
+   * In no-diff mode, the whole operation process will be executed, regardless of what changes happen
+   */
+  noDiff: boolean
+
   clusters: KubernetesEnvironment[]
 
   /**
@@ -117,7 +117,6 @@ export interface OperatorParam {
 export type EngineConfig = {
   serverConf: ServerConfig
   clientConf: ClientConfig
-  variables: ContextVariables
   plugins: YamPlugin[]
 }
 

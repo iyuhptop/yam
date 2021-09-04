@@ -1,4 +1,4 @@
-import { IApplicationModel, OperateFunction, Operator, PlanContext, SchemaHandler } from '@yam/types'
+import { IApplicationModel, OperateFunction, Operator, PlanContext, PluginDefinition } from '@yam/types'
 import * as _ from 'lodash'
 import type { YamPlugin } from '../types'
 import { createLogger } from '../util'
@@ -45,11 +45,12 @@ export default class YamPluginComposer {
       if (!plugin.enable) {
         continue
       }
+
       const schemaName = currentYam.schema.split('/')[0].trim()
       if (plugin.applyTo?.indexOf(schemaName) === -1) {
         continue
       } else {
-        this.log.info(`enable plugin: ${plugin.name}:${plugin.version}`)
+        this.log.info(`loading plugin: ${plugin.name}:${plugin.version}`)
       }
 
       // import plugin as commonjs module dynamically
@@ -65,7 +66,7 @@ export default class YamPluginComposer {
       } finally {
         !plugin.builtIn && module.paths.shift()
       }
-      const pluginModule = requiredPlugin.default as SchemaHandler
+      const pluginModule = requiredPlugin.default as PluginDefinition
 
       // schema is the json schema for validating currentYam object, merge all plugins schema
       mergedJsonSchema = this.mergeJsonSchema(pluginModule.schema, mergedJsonSchema)
@@ -73,8 +74,44 @@ export default class YamPluginComposer {
       // merge all plugins handlers, build handler array
       this.mergeHandlers(pluginModule, mergedHandlers, plugin)
     }
+    this.sortHandlers(mergedHandlers)
+    this.log.info(`plugins and schema loaded, composed ${mergedHandlers.length} operation handlers.`)
     return { jsonSchema: mergedJsonSchema, handlers: mergedHandlers }
   }
+
+  /**
+   * sort handlers by it's matcher expression, to make it run in correct order
+   */
+  private sortHandlers(mergedHandlers: MergedHandler[]) {
+    // order of workflow stages
+    const order = {
+      metadata: 1e1,
+      prepare: 1e2,
+      config: 1e3,
+      deploy: 1e4,
+      access: 1e5,
+      observe: 1e6,
+      scale: 1e7,
+    } as { [key: string]: number }
+    const getFirstPropOrder = (str: string): number => {
+      if (str.startsWith("$.")) {
+        str = str.substring(2)
+      }
+      str = str.substring(0, str.indexOf("."))
+      return order[str] || Number.MAX_SAFE_INTEGER
+    }
+    mergedHandlers.sort((h1, h2) => {
+      const m1 = getFirstPropOrder(h1.matcher)
+      const m2 = getFirstPropOrder(h2.matcher)
+      if (m1 == m2) {
+        // run in same stage, compare matcher expression length, the shortest one run at first
+        return h1.matcher.length - h2.matcher.length
+      } else {
+        return m1 - m2
+      }
+    })
+  }
+
 
   /**
    * resolve json schema, merge into one final schema
@@ -100,7 +137,7 @@ export default class YamPluginComposer {
   /**
    * resolve operator functions of certain plugin
    */
-  private mergeHandlers(pluginModule: SchemaHandler, mergedHandlers: MergedHandler[], plugin: YamPlugin): void {
+  private mergeHandlers(pluginModule: PluginDefinition, mergedHandlers: MergedHandler[], plugin: YamPlugin): void {
     const handlers = pluginModule.handlers
     const name = pluginModule.name
     if (name !== plugin.name) {
@@ -139,7 +176,7 @@ export default class YamPluginComposer {
   /**
    * Wrap environment variables of each plugin into closure
    */
-  private wrapEnvProvider(plugin: YamPlugin, handlerFunc: unknown, jsonPath: string): OperateFunction {
+  private wrapEnvProvider(plugin: YamPlugin, handlerFunc: unknown, jsonPath: string): OperateFunction<unknown> {
     const envIsolationBackup = new Map<string, string | undefined>()
     plugin.environmentVars.forEach((v, k) => {
       envIsolationBackup.set(k, process.env[k])
@@ -147,7 +184,7 @@ export default class YamPluginComposer {
     })
     return async (...args: unknown[]) => {
       try {
-        await (handlerFunc as OperateFunction).apply({}, args)
+        await (handlerFunc as OperateFunction<unknown>).apply({}, args)
       } catch (ex) {
         (args[0] as PlanContext).log.error(`plugin ${plugin.name} failed during plan stage when resolving ${jsonPath}`, ex)
         throw ex
@@ -180,5 +217,5 @@ export type SchemaHandlerFunc = {
 
 export type MergedHandler = {
   matcher: string,
-  handlers: { pluginName: string, func: OperateFunction }[]
+  handlers: { pluginName: string, func: OperateFunction<unknown> }[]
 }

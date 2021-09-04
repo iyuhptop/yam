@@ -7,11 +7,13 @@ export type KV = {
   [key: string]: unknown
 }
 
+export type BasicType = string | number | boolean
+
 export type KVString = {
   [key: string]: string
 }
 
-export interface SchemaHandler {
+export interface PluginDefinition {
   name: string,
   schema: unknown,
   handlers: KV
@@ -31,15 +33,21 @@ export enum WorkloadType {
  * "path" is the object/array json path, when previous/current is null,
  * it indicates it was new created or deleted.
  */
-export type DiffResult = {
-  jsonPath: string
-  previous: unknown | null
-  current: unknown | null
+export type DiffResult<T> = {
+  hasDiff: boolean
+
+  hasNew: boolean
+  newItems: T[]
+
+  hasDeleted: boolean
+  deletedItems: T[]
+
+  hasModified: boolean
+  modifiedItems: { previous: T, current: T }[]
 }
 
 /**
- * PlanContext will be provided in Plan stage, generate plan file and 
- * dry run the YAM files, prompt is also allowed in this stage.
+ * PlanContext is provided in Plan stage for plugins
  */
 export interface PlanContext {
   data: PlanContextData
@@ -52,12 +60,6 @@ export interface PlanContext {
    * append actions to be executed in Apply stage.
    */
   action: (...actions: Action[]) => void
-
-  /**
-   * prompt user to input customized variables in Plan stage,
-   * while running in Apply stage, it will use default value or planned value.
-   */
-  prompt: <T> (variableName: string, text: string, defaultVal: T) => Promise<T>
 
   /**
    * read files of YAM directory relative path, handle yaml includes and replace placeholders with values
@@ -75,8 +77,6 @@ export type PlanContextData = {
 
   currentModelFull: IApplicationModel
   previousModelFull: IApplicationModel
-
-  variables: Map<string, unknown>
 
   workingDir: string
   stackName: string
@@ -99,11 +99,11 @@ export interface ExecuteContext {
    */
   dryRunMode: boolean
 
-
   /**
    * KubernetesObject manipulation, core features of YAM.
    */
   mergeToYaml: (param: YamlTransformParam) => void
+
   removeFromYaml: (param: YamlTransformParam) => void
 
   /**
@@ -234,10 +234,10 @@ export type Action = (ctx: ExecuteContext) => Promise<void>
 /**
  * OperateFunction and Operator is a common interface for implementing YAM handlers.
  */
-export type OperateFunction = (plan: PlanContext, params: unknown, diff: DiffResult) => Promise<void>
+export type OperateFunction<T> = (plan: PlanContext, params: T, diff: DiffResult<T>) => Promise<void>
 
 export interface Operator {
-  operate: OperateFunction
+  operate: OperateFunction<unknown>
 }
 
 export interface IMetadata {

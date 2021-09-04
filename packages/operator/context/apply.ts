@@ -41,8 +41,13 @@ export default class YamApplyContext implements ExecuteContext {
         path: jsonPath,
         json: this.managedK8SResources.get(param.filename) as KV
       })
-      // object will be modified because of side-effect of _.mergeWith
-      mergeObject(patchObj, param.content, param.arrayReplaceMode)
+      if (patchObj && patchObj.length > 0) {
+        for (const obj of patchObj) {
+          // object will be modified because of side-effect of _.mergeWith
+          mergeObject(obj, param.content, param.arrayReplaceMode)
+        }
+      }
+
     }
     this.log.info("merged yaml content", param.filename)
   }
@@ -58,14 +63,16 @@ export default class YamApplyContext implements ExecuteContext {
         path: jsonPath,
         json: this.managedK8SResources.get(param.filename) as KV
       })
-      if (!patchTargetObj) {
+      if (!patchTargetObj || patchTargetObj.length === 0) {
         throw new Error(`can not find patching target for resource: ${param.filename}, patch path: ${path}`)
       }
       const idx = path.lastIndexOf('.')
       const tailProp = path.substring(idx + 1)
       if (/^[\w\d-_]+$/.test(tailProp)) {
         this.log.warn(`delete '${tailProp}' from object path ${path.substring(0, idx)}.`)
-        delete patchTargetObj[tailProp]
+        for (const obj of patchTargetObj) {
+          delete obj[tailProp]
+        }
       } else {
         this.log.error(`tailing wildcard(${tailProp}) expression is not supported when deleting with json path, no effect.`)
       }

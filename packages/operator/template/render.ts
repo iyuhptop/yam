@@ -29,6 +29,7 @@ export default class TemplateRender {
   private log = createLogger('template')
 
   public async readCustomizedValues(workingDir: string, cmdParams: Map<string, string>, clusters: KubernetesEnvironment[], model: IApplicationModel): Promise<Map<string, KV>> {
+    this.log.info('loading dynamic parameters for different environments.')
     const valuesDir = path.join(workingDir, VALUES_DIR)
 
     // final result after transform, like { "someEnv": { "someParam" : "someValue" } }
@@ -105,6 +106,7 @@ export default class TemplateRender {
         })
       }
     })
+    this.log.info(`dynamic parameters loaded from 'values' directory`)
     return result
   }
 

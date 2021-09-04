@@ -19,21 +19,27 @@ export default class YamStateStore {
       return
     }
 
-    // TODO create tmp directory and persist current models, settings, variables, then zip it
+    // TODO create tmp directory and persist current models, settings, then zip it
+    this.log.info(`start persisting YAM plan file.`)
+
 
     if (this.storeType === "local-file" || this.storeType === "hybrid") {
       // TODO
     } else if (this.storeType === "cloud") {
       // TODO encrypt and send to https://yam.plus
     }
+
+    this.log.info(`YAM plan file stored somewhere`)
   }
 
   async storeResult(): Promise<void> {
     if (this.operatorParam.runMode === "plan-only") {
       return
     }
+    this.log.info(`storing operation results.`)
 
     // TODO in cloud mode, each plan/apply has unique id, result could send to cloud with that id, for cloud dashboards
+    this.log.info(`operation results persisted.`)
   }
 
 }

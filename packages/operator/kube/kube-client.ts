@@ -11,21 +11,29 @@ import { createLogger } from "../util"
  */
 export default class KubernetesOperatorClient implements KubernetesOperator {
 
-  private kubeConfig
+  private currentCluster: KubernetesEnvironment
+  private allClusters: KubernetesEnvironment[]
+
   private log = createLogger('kubernetes')
 
-  private constructor(kubeConfig: KubernetesEnvironment[]) {
-    this.kubeConfig = kubeConfig
+  private constructor(clusters: KubernetesEnvironment[]) {
+    this.allClusters = clusters
+    this.log.info(`kubernetes client config loaded`)
   }
 
-  static async create(kubeConfig: KubernetesEnvironment[]) {
-    const kClient = new KubernetesOperatorClient(kubeConfig)
+  static async create(k8sClusters: KubernetesEnvironment[]) {
+    // TODO kube client impl
+    const kClient = new KubernetesOperatorClient(k8sClusters)
     return kClient
+  }
+
+  setCurrentContext(current: KubernetesEnvironment) {
+    this.currentCluster = current
   }
 
   async find(resource: K8SResourceMeta, cluster?: string): Promise<KubernetesObject[]> {
     this.log.info('[kubernetes] find resource.')
-    this.kubeConfig
+    this.allClusters
     return []
   }
 

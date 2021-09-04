@@ -13,17 +13,9 @@ client:
   telemetry: false
   lockType: none # or cloud, or k8s
 
-# variables shared through all stages and steps, do not put secrets here
-variables:
-  imageRepoBase: 
-    domain: harbor.your-corp.com
-    useForAllContainers: false
-  serviceMonitorLabels: 
-    release: prometheus
-  alertRuleLabels:
-    release: prometheus
-
 plugins:
+  # built-in plugins and marketplace plugins - downloaded from npm/yam.plus
+
   # if server side enabled, will auto download plugins from server side
   - package: "mysql-provisioner:1.0.0"
     # url: yam.plus/user-space/tidb-provisioner:1.0.0" for private plugins
@@ -40,5 +32,6 @@ plugins:
     enable: false
 
   - package: "helm-operator:1.0.0"
+    builtIn: true
 
   - package: "pulumi-operator:1.0.0"

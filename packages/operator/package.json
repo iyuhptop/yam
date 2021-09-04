@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "main.ts",
   "scripts": {
-    "compile": "tsc"
+    "compile": "tsc",
+    "test": "jest"
   },
   "description": "Yet Another Application Model - a simpler way to run your app on kubernetes",
   "repository": {
@@ -27,17 +28,24 @@
   "dependencies": {
     "@kubernetes/client-node": "^0.15.1",
     "@types/fs-extra": "^9.0.12",
+    "@types/object-hash": "^2.1.1",
     "@yam/types": "workspace:^",
     "ajv": "^8.6.2",
     "axios": "^0.21.1",
     "fs-extra": "^10.0.0",
     "js-yaml": "^4.1.0",
+    "jsondiffpatch": "^0.4.1",
     "jsonpath-plus": "^6.0.1",
     "lodash": "^4.17.21",
+    "object-hash": "^2.2.0",
     "pino": "^6.13.1"
   },
   "devDependencies": {
+    "@types/jest": "^27.0.1",
     "@types/js-yaml": "^4.0.3",
-    "@types/pino": "^6.3.11"
+    "@types/pino": "^6.3.11",
+    "jest": "^27.1.0",
+    "pino-pretty": "^6.0.0",
+    "ts-jest": "^27.0.5"
   }
 }

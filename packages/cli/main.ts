@@ -20,7 +20,7 @@
 // # configuration and plugin management
 // yam config TODO
 // yam plugin enable/disable helm-operator
-// yam plugin add/remove terraform-operator (prompt each env key-value input after install)
+// yam plugin add/remove terraform-operator
 
 // # tools
 // yam forward team/app --from-to 8080:8089 [--no-check]

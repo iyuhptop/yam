@@ -1,4 +1,4 @@
-import { SchemaHandler } from '@yam/types'
+import { PluginDefinition } from '@yam/types'
 import * as schema from './application.schema.json'
 import configOperator from './handlers/config/config-operator'
 import secretOperator from './handlers/config/secret-operator'
@@ -33,4 +33,4 @@ export default {
     // 'scale.type=metrics': hpaOperator,
     // 'scale.type=cron': cronScalerOperator,
   }
-} as SchemaHandler
+} as PluginDefinition
