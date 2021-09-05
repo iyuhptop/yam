@@ -28,7 +28,7 @@ deploy:
 
   imageRepo: "domain.corp.com/your-team/your-app"
 
-  s: regcred, ecr-cred
+  imagePullSecret: regcred, ecr-cred
 
   commands: []
 
@@ -197,24 +197,3 @@ scale:
     after: 4h
     thenScaleTo: 2
     timezone: auto
-
-# ```yaml
-# .values/params.yaml
-sampling.rate:
-  default: 3%
-  dev: 100% # equivalent to dev:dev
-  staging: 50%
-
-  # default value for all context with this tag
-  prod: 5%
-  prod:canary: 5%
-
-  # tagging, will lookup context prod:us context
-  prod:us-east-1: 4%
-  prod:eu-central-1: 0%
-  prod:ap-south-1: 2%
-  # prod:others will use 'prod' value
-
-# .values/app.config.yaml
-my-app-configs: values
-# ```

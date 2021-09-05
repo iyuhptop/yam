@@ -35,10 +35,14 @@ export class MainOperator {
       this.log.info('you are using the most secure way -- deploy nowhere')
       return
     }
-    this.yamEngine = new YamEngine(this.templateRender, param)
     this.log.info('operation process started...')
 
-    // a. read YAM definition
+    // a. initialize kubernetes client and YAM engine
+    this.kubeClient = await KubernetesOperatorClient.create(param.clusters)
+    this.yamEngine = new YamEngine(this.templateRender, param, this.kubeClient)
+
+
+    // b. read YAM definition
     const yamPath = this.checkApplicationModelPath(param.workingDir)
     const yamObj = await this.templateRender.loadYaml(param.workingDir, yamPath) as IApplicationModel
     if (!yamObj || !yamObj.schema) {
@@ -46,18 +50,15 @@ export class MainOperator {
     }
     this.log.info(`plan to sync operation model for component: ${yamObj.metadata.namespace}/${yamObj.metadata.app}`)
 
-    // b. merge plugin schema to build final json schema
+    // c. merge plugin schema to build final json schema
     const schemaHandlers = await this.pluginComposer.compose(param.engine.plugins, param.workingDir, yamObj)
     this.jsonSchema = schemaHandlers.jsonSchema
     this.handlers = schemaHandlers.handlers
 
-    // c. read dynamic values from 'values/' directory
+    // d. read dynamic values from 'values/' directory
     const customizedValues = await this.templateRender.readCustomizedValues(param.workingDir, param.cmdParams, param.clusters, yamObj)
 
-    // d. initialize kubernetes client
-    this.kubeClient = await KubernetesOperatorClient.create(param.clusters)
-
-    // e. plan and apply one by one
+    // e. plan and apply changes for each environment
     for (const cluster of param.clusters) {
       this.kubeClient.setCurrentContext(cluster)
       const customizedVal = customizedValues.get(cluster.name) || {}
@@ -100,7 +101,7 @@ export class MainOperator {
 
     // d. start Apply Stage
     if (param.runMode !== "plan-only") {
-      const executeCtx = new YamApplyContext(this.kubeClient, param.dryRunMode)
+      const executeCtx = new YamApplyContext(this.kubeClient, !!param.dryRunMode)
       await this.yamEngine.apply(param, planCtx, executeCtx)
     }
   }

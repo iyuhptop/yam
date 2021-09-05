@@ -246,6 +246,7 @@ export default class TemplateRender {
       this.log.error(`${expr} could not be applied because ${path} has been included by other file`)
       throw new Error(`can not include ${path} again`)
     }
+    // will throw error if included file not exists
     const result = await this.loadYaml(workingDir, path)
     this.includeCache.add(path)
     return result

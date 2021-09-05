@@ -1,16 +1,19 @@
+import KubernetesOperatorClient from "../kube/kube-client"
 import { StateLockType, OperatorParam } from "../types"
 import { createLogger } from "../util"
 
 export default class YamStateLocker {
 
   private operatorParam: OperatorParam
+  private kubeClient: KubernetesOperatorClient
   private lockType: StateLockType
 
   private log = createLogger("state-locker")
 
-  constructor(operatorParam: OperatorParam) {
-    this.lockType = this.operatorParam.engine.clientConf.lockType
+  constructor(operatorParam: OperatorParam, kubeClient: KubernetesOperatorClient) {
+    this.lockType = operatorParam.engine.clientConf.lockType
     this.operatorParam = operatorParam
+    this.kubeClient = kubeClient
   }
   async lock(param: OperatorParam): Promise<void> {
     // TODO

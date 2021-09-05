@@ -19,21 +19,14 @@ export interface PluginDefinition {
   handlers: KV
 }
 
-export enum WorkloadType {
-  Deployment,
-  StatefulSet,
-  DaemonSet,
-
-  Job,
-  CronJob
-}
-
 /**
  * The diff result between previous YAM and current YAM.
  * "path" is the object/array json path, when previous/current is null,
  * it indicates it was new created or deleted.
  */
 export type DiffResult<T> = {
+  currentItems: T[]
+
   hasDiff: boolean
 
   hasNew: boolean
@@ -59,7 +52,7 @@ export interface PlanContext {
   /**
    * append actions to be executed in Apply stage.
    */
-  action: (...actions: Action[]) => void
+  action: (action: Action, name?: string) => void
 
   /**
    * read files of YAM directory relative path, handle yaml includes and replace placeholders with values
@@ -80,7 +73,7 @@ export type PlanContextData = {
 
   workingDir: string
   stackName: string
-  environmentName: string
+  envTagName: string
 
   runMode: OperatorMode
 }
@@ -131,7 +124,7 @@ declare type ApiConstructor<T extends ApiType> = new (server: string) => T;
 export interface KubernetesOperator {
   find: (resource: K8SResourceMeta, cluster?: string) => Promise<KubernetesObject[]>
   apply: (resource: string | KV, cluster?: string) => Promise<boolean>
-  remove: (resource: K8SResourceMeta, cluster?: string) => Promise<boolean>
+  delete: (resource: K8SResourceMeta, cluster?: string) => Promise<boolean>
 
   getPods: (workload: K8SResourceMeta, cluster?: string) => Promise<V1PodList>
   getConfig: (conf: ConfigData, cluster?: string) => Promise<KVString>
@@ -175,8 +168,46 @@ export type YamlTransformParam = {
 export type K8SResourceMeta = {
   name: string
   namespace: string
-  kind: string | WorkloadType
+  kind: K8SResourceType | string
   apiVersion?: string
+}
+
+export enum K8SResourceType {
+  Pod,
+  Deployment,
+  StatefulSet,
+  DaemonSet,
+  Job,
+  CronJob,
+
+  ConfigMap,
+  Secret,
+
+  Namespace,
+  LimitRange,
+  Node,
+  Event,
+
+  NetworkPolicy,
+  Ingress,
+  Service,
+  Endpoint,
+
+  StorageClass,
+  PersistantVolume,
+  PersistantVolumeClaim,
+
+  Role,
+  ClusterRole,
+  RoleBinding,
+  ClusterRoleBinding,
+  ServiceAccount,
+
+  ApiService,
+  CustomResourceDefinition,
+
+  HorizontalPodAutoScaler,
+  PodDisruptionBudget
 }
 
 export type ConfigData = {
@@ -234,10 +265,10 @@ export type Action = (ctx: ExecuteContext) => Promise<void>
 /**
  * OperateFunction and Operator is a common interface for implementing YAM handlers.
  */
-export type OperateFunction<T> = (plan: PlanContext, params: T, diff: DiffResult<T>) => Promise<void>
+export type OperateFunction<T> = (plan: PlanContext, diff: DiffResult<T>) => Promise<void>
 
-export interface Operator {
-  operate: OperateFunction<unknown>
+export interface Operator<T> {
+  operate(plan: PlanContext, diff: DiffResult<T>): Promise<void>
 }
 
 export interface IMetadata {

@@ -49,7 +49,7 @@ export interface YamPlugin {
   /**
    * Plugin download directory, by default is ~/.yam/plugins/<version>/<plugin-name>
    */
-  directory: string
+  directory?: string
 
   /**
    * Specify which application models to apply
@@ -66,7 +66,7 @@ export interface YamPlugin {
   /**
    * built-in plugins release with YAM binary and npm packages
    */
-  builtIn: boolean
+  builtIn?: boolean
 }
 
 /**
@@ -88,18 +88,18 @@ export interface OperatorParam {
    * If planned in advance, plan file could be specified in Apply stage
    * eg. yam apply -f release-plan-<timestamp>.bin
    */
-  planFile: string
+  planFile?: string
 
   /**
    * Control the side-effect for Apply Mode, dry-run won't write anything 
    * into Kubernetes or send any None-Get requests
    */
-  dryRunMode: boolean
+  dryRunMode?: boolean
 
   /**
    * In no-diff mode, the whole operation process will be executed, regardless of what changes happen
    */
-  noDiff: boolean
+  noDiff?: boolean
 
   clusters: KubernetesEnvironment[]
 
@@ -115,7 +115,7 @@ export interface OperatorParam {
 }
 
 export type EngineConfig = {
-  serverConf: ServerConfig
+  serverConf?: ServerConfig
   clientConf: ClientConfig
   plugins: YamPlugin[]
 }
@@ -124,9 +124,9 @@ export type EngineConfig = {
  * YAM engine client side configurations
  */
 export type ClientConfig = {
-  kubeConfig: string
-  contextMapping: Map<string, string>
-  telemetry: boolean
+  kubeConfig?: string
+  contextMapping?: Map<string, string>
+  telemetry?: boolean
   lockType: StateLockType
   planStoreType: PlanFileStoreType
 }

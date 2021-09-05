@@ -1,4 +1,4 @@
-import type { Action, PlanContext, PlanContextData } from "@yam/types"
+import type { Action, KV, PlanContext, PlanContextData } from "@yam/types"
 import * as lodash from 'lodash'
 import TemplateRender from "../template/render"
 import { createLogger } from "../util"
@@ -24,13 +24,14 @@ export default class YamPlanContext implements PlanContext {
   /**
    * Append function to operation action queue
    * 
-   * @param actions the functions that need to be executed during 'apply' stage
+   * @param actionFunc the functions that need to be executed during 'apply' stage
    */
-  action(...actions: Action[]): void {
-    this.data.actions.push(...actions)
-    actions.forEach((action) => {
-      this.log.debug(`action added, name: ${action.name || '<anonymous>'}`)
-    })
+  action(actionFunc: Action, name?: string): void {
+    this.data.actions.push(actionFunc)
+    if (name) {
+      (actionFunc as unknown as KV).actionName = name
+    }
+    this.log.info(`action [${name || actionFunc.name || '<anonymous>'}] added`)
   }
 
   async renderTemplate(relativePath: string, handleInclude: boolean): Promise<string> {

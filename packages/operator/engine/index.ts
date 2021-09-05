@@ -1,9 +1,10 @@
-import type { BasicType, DiffResult, ExecuteContext, IApplicationModel, KV, PlanContext, PlanContextData } from '@yam/types'
+import { BasicType, DiffResult, ExecuteContext, IApplicationModel, K8SResourceType, KV, PlanContext, PlanContextData } from '@yam/types'
 import * as yaml from 'js-yaml'
 import { JSONPath } from 'jsonpath-plus'
 import * as _ from 'lodash'
 import * as hasher from 'object-hash'
 import YamPlanContext from '../context/plan'
+import KubernetesOperatorClient from '../kube/kube-client'
 import TemplateRender from '../template/render'
 import type { KubernetesEnvironment, OperatorParam } from '../types'
 import { createLogger, normalizeJsonPath, validateJsonSchema } from '../util'
@@ -23,11 +24,11 @@ export default class YamEngine {
 
   private log = createLogger("yam-engine")
 
-  constructor(templateRender: TemplateRender, operatorParam: OperatorParam) {
+  constructor(templateRender: TemplateRender, operatorParam: OperatorParam, kubeClient: KubernetesOperatorClient) {
     this.templateRender = templateRender
     this.operatorParam = operatorParam
-    this.store = new YamStateStore(operatorParam)
-    this.locker = new YamStateLocker(operatorParam)
+    this.store = new YamStateStore(operatorParam, kubeClient)
+    this.locker = new YamStateLocker(operatorParam, kubeClient)
   }
 
   /**
@@ -49,20 +50,23 @@ export default class YamEngine {
 
     // create Plan stage context instance
     const planContextData: PlanContextData = {
-      actions: [],
+      // initialize apply stage actions
+      actions: [this.getNamespaceCheckAction(current.metadata.namespace)],
+      // provide complete application model data
       currentModelFull: current,
       previousModelFull: prev,
       // dynamic parameters for template rendering
       customizedValues,
+      // others esstential context data
       workingDir: this.operatorParam.workingDir,
       stackName: cluster.stack,
-      environmentName: cluster.name,
+      envTagName: cluster.name,
       runMode: this.operatorParam.runMode
     }
 
     // query by each JSON path defined in plugins, call coresponding operate functions
     const planContext = new YamPlanContext(this.templateRender, planContextData)
-    await this.matchJsonPathAndCallOperate(planContext, handlers)
+    await this.diffJsonPathAndInvokeHandlers(planContext, handlers)
 
     // store the planned binary file to local or/and cloud
     await this.store.persistPlan(planContext)
@@ -78,7 +82,10 @@ export default class YamEngine {
     try {
       this.log.info('============== Apply Stage Start ==============')
       for (const action of planCtx.data.actions) {
+        const actionName = (action as unknown as KV).actionName || action.name || '<anonymous>'
+        this.log.info(`[${actionName}] - action executing.`)
         await action(executeCtx)
+        this.log.info(`[${actionName}] - action done.`)
       }
       this.log.info('============== Apply Stage End ==============')
     } finally {
@@ -87,7 +94,28 @@ export default class YamEngine {
     }
   }
 
-  private async matchJsonPathAndCallOperate(planCtx: YamPlanContext, jsonPathHandlers: MergedHandler[]) {
+  private getNamespaceCheckAction(namespace: string) {
+    return async function checkNamespace(ctx: ExecuteContext) {
+      const checked = await ctx.k8sClient.find({
+        kind: K8SResourceType.Namespace,
+        name: namespace,
+        namespace: namespace
+      })
+      if (checked.length === 0) {
+        await ctx.k8sClient.apply({
+          apiVersion: "v1",
+          kind: K8SResourceType.Namespace,
+          metadata: {
+            name: namespace
+          }
+        })
+        ctx.log.info(`new namespace ${namespace} created.`)
+
+      }
+    }
+  }
+
+  private async diffJsonPathAndInvokeHandlers(planCtx: YamPlanContext, jsonPathHandlers: MergedHandler[]) {
     for (const matchedHandler of jsonPathHandlers) {
       const jsonPath = normalizeJsonPath(matchedHandler.matcher)
       const partialCurrent = JSONPath({ path: jsonPath, json: planCtx.data.currentModelFull }) || []
@@ -100,7 +128,7 @@ export default class YamEngine {
       for (const operateFunction of matchedHandler.handlers) {
         this.log.info(`calling plugin [${operateFunction.pluginName}]`)
         const actionCnt = planCtx.data.actions.length
-        await operateFunction.func(planCtx, partialCurrent, diff)
+        await operateFunction.func(planCtx, diff)
         this.log.info(`plugin [${operateFunction.pluginName}] handled, [${planCtx.data.actions.length - actionCnt}] actions appended.`)
       }
     }
@@ -111,6 +139,8 @@ export default class YamEngine {
     const previousMap = this.convertSelectedItemsToMap(previous)
 
     const diff: DiffResult<unknown> = {
+      currentItems: [...currentMap.values()],
+
       hasDiff: false,
 
       hasNew: false,

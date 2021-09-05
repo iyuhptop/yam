@@ -57,6 +57,9 @@ export default class YamPluginComposer {
       let requiredPlugin
       try {
         // dynamic import plugin codes in plugin directory
+        if (!plugin.directory) {
+          throw new Error(`plugin directory not provided for ${plugin.name}`)
+        }
         !plugin.builtIn && module.paths.unshift(plugin.directory)
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         requiredPlugin = require(plugin.name)
@@ -200,7 +203,7 @@ export default class YamPluginComposer {
    * class that implement 'operate' interface, create a instance and then wrap the function
    */
   private wrapClassStyleOperator(handlerFuncClass: ObjectConstructor): unknown {
-    const operateFunc = (handlerFuncClass.prototype as Operator).operate
+    const operateFunc = (handlerFuncClass.prototype as Operator<unknown>).operate
     return (() => {
       const instance = new handlerFuncClass()
       return async (...args: unknown[]) => {

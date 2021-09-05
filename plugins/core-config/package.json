@@ -1,11 +1,11 @@
 {
-  "name": "@yam/plugin-deploy-core",
+  "name": "@yam/plugin-config-core",
   "version": "1.0.0",
   "description": "",
   "main": "index.ts",
   "scripts": {
     "build": "ncc build index.ts -o dist",
-    "gen:type": "json2ts -i application.schema.json -o application.schema.d.ts"
+    "gen:type": "json2ts -i config.schema.json -o types.d.ts"
   },
   "repository": {
     "type": "git",

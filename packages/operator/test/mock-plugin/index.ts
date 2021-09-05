@@ -1,14 +1,14 @@
 import { PluginDefinition } from '@yam/types'
 import * as schema from './application.schema.json'
 import configOperator from './handlers/config/config-operator'
-import secretOperator from './handlers/config/secret-operator'
-import deploymentOperator from './handlers/deploy/deployment-operator'
+// import secretOperator from './handlers/config/secret-operator'
+// import deploymentOperator from './handlers/deploy/deployment-operator'
 
 /**
  * Each application mod
  */
 export default {
-  name: 'application',
+  name: 'mock-plugin',
   schema,
   handlers: {
     // 'prepare.type=redis|redis-cluster': redisOperator,
@@ -17,10 +17,10 @@ export default {
     // 'prepare.type=terraform': terraformOperator,
     // 'prepare.type=pulumi': pulumiOperator,
 
-    'config.type=configMap': configOperator,
-    'config.type=secret': secretOperator,
+    'config[@.type=="configMap"]': configOperator,
+    // 'config.type=secret': secretOperator,
 
-    'deploy.type=deployment': deploymentOperator,
+    // 'deploy.type=deployment': deploymentOperator,
     // 'deploy.type=statefulset': statefulsetOperator,
     // 'deploy.type=daemonset': daemonsetOperator,
     // 'deploy.type=cronjob': cronjobOperator,

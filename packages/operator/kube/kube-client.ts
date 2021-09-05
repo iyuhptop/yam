@@ -42,7 +42,7 @@ export default class KubernetesOperatorClient implements KubernetesOperator {
     return false
   }
 
-  async remove(resource: K8SResourceMeta, cluster?: string): Promise<boolean> {
+  async delete(resource: K8SResourceMeta, cluster?: string): Promise<boolean> {
     this.log.info('[kubernetes] remove resource.')
     return true
   }
