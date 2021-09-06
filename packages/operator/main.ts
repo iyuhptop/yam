@@ -42,7 +42,6 @@ export class MainOperator {
     this.kubeClient = await KubernetesOperatorClient.create(param.clusters)
     this.yamEngine = new YamEngine(this.templateRender, param, this.kubeClient)
 
-
     // b. read YAM definition
     const yamPath = this.checkApplicationModelPath(param.workingDir)
     const yamObj = await this.templateRender.loadYaml(param.workingDir, yamPath) as IApplicationModel

@@ -1,7 +1,7 @@
 import Ajv, { ErrorObject, Schema } from 'ajv'
 import * as _ from 'lodash'
 import * as pino from 'pino'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 import { JSON_PATH_PREFIX } from '../constants'
 
 const ajv = new Ajv()
@@ -9,7 +9,7 @@ const ajv = new Ajv()
 /**
  * Create logger for different sub-module
  * 
- * @param name logger name1
+ * @param name logger name
  * @returns Pino Logger
  */
 export const createLogger = (name: string): Logger => {
