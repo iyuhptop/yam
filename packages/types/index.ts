@@ -119,7 +119,7 @@ export interface ExecuteContext {
   _: LoDashStatic
 }
 
-declare type ApiConstructor<T extends ApiType> = new (server: string) => T;
+export type ApiConstructor<T extends ApiType> = new (server: string) => T;
 
 export interface KubernetesOperator {
   find: (resource: K8SResourceMeta, cluster?: string) => Promise<KubernetesObject[]>
