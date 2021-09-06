@@ -1,3 +1,5 @@
+process.env.DEBUG = "true"
+
 import { MainOperator } from '../main'
 import { EngineConfig, YamPlugin } from '../types'
 import * as path from 'path'
@@ -24,11 +26,15 @@ test("operate process should work", async () => {
   const cmdParams = new Map<string, string>()
   cmdParams.set('version', '1.0.0')
 
-  await operator.operate({
-    workingDir: path.join(__dirname, '/mock-yam'),
-    runMode: 'plan-apply',
-    cmdParams,
-    clusters: MockedK8SEnv,
-    engine: MockedEngineConfig
-  })
+  try {
+    await operator.operate({
+      workingDir: path.join(__dirname, 'mock-yam'),
+      runMode: 'plan-apply',
+      cmdParams,
+      clusters: MockedK8SEnv,
+      engine: MockedEngineConfig
+    })
+  } catch (ex) {
+    console.error(ex)
+  }
 })

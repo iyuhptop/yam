@@ -35,6 +35,7 @@ export class MainOperator {
       this.log.info('you are using the most secure way -- deploy nowhere')
       return
     }
+    const timestamp = Date.now()
     this.log.info('operation process started...')
 
     // a. initialize kubernetes client and YAM engine
@@ -62,10 +63,10 @@ export class MainOperator {
     for (const cluster of param.clusters) {
       this.kubeClient.setCurrentContext(cluster)
       const customizedVal = customizedValues.get(cluster.name) || {}
-      this.log.info(`processing environment [${cluster.envTag}] of stack [${cluster.stack}], got ${Object.keys(customizedVal)} dynamic parameters.`)
+      this.log.info(`processing environment [${cluster.envTag}] of stack [${cluster.stack}], got ${Object.keys(customizedVal).length} dynamic parameters.`)
       await this.planApply(param, cluster, customizedVal)
     }
-    this.log.info('operation process finished.')
+    this.log.info(`operation process finished, cost ${(Date.now() - timestamp) / 1000}s`)
   }
 
   /**

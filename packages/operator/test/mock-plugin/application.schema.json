@@ -56,7 +56,6 @@
       "title": "Prerequisites",
       "description": "Prepare infrastructure dependencies of your application",
       "default": [],
-      "additionalItems": true,
       "items": {
         "anyOf": [
           {
@@ -113,7 +112,6 @@
       "type": "array",
       "description": "Describe configurations and secrets of your application",
       "default": [],
-      "additionalItems": true,
       "items": {
         "anyOf": [
           {
@@ -149,7 +147,7 @@
                 "type": "array",
                 "description": "Describe the configuration source, the relative file paths in application model directory",
                 "default": [],
-                "additionalItems": true,
+      
                 "items": {
                   "type": "string"
                 }
@@ -208,7 +206,7 @@
                 "type": "array",
                 "description": "Describe the secret source, the relative file paths in application model directory",
                 "default": [],
-                "additionalItems": true,
+      
                 "items": {
                   "anyOf": [
                     {
@@ -299,7 +297,7 @@
           "type": "array",
           "description": "The commands to start the application",
           "default": [],
-          "additionalItems": true,
+
           "items": {}
         },
         "port": {
@@ -460,7 +458,6 @@
               "type": "array",
               "description": "Define actions when health check fails",
               "default": [],
-              "additionalItems": true,
               "items": {
                 "anyOf": [
                   {
@@ -504,7 +501,7 @@
           "type": "array",
           "description": "Environment variables",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -557,7 +554,7 @@
               "type": "array",
               "description": "The extra script to run after started",
               "default": [],
-              "additionalItems": true,
+    
               "items": {
                 "anyOf": [
                   {
@@ -572,7 +569,7 @@
               "type": "array",
               "description": "The extra script to run before terminating",
               "default": [],
-              "additionalItems": true,
+    
               "items": {
                 "anyOf": [
                   {
@@ -590,7 +587,7 @@
           "type": "array",
           "description": "The Sidecar container for the application",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -645,7 +642,7 @@
           "type": "array",
           "description": "Extra volume mounts",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -741,14 +738,13 @@
                 }
               }
             }
-          },
-          "additionalItems": true
+          }
         },
         "permissions": {
           "type": "array",
           "description": "Grant permissions to call Kubernetes API server",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -802,7 +798,7 @@
           "type": "array",
           "description": "Add extra native orchestration files to apply",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -848,7 +844,7 @@
           "type": "array",
           "description": "The ingress and routing configurations.",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {
@@ -938,7 +934,7 @@
         "auth": {
           "type": "array",
           "default": [],
-          "additionalItems": true,
+
           "items": {
             "anyOf": [
               {

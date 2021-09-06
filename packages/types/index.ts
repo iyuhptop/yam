@@ -194,8 +194,8 @@ export enum K8SResourceType {
   Endpoint,
 
   StorageClass,
-  PersistantVolume,
-  PersistantVolumeClaim,
+  PersistentVolume,
+  PersistentVolumeClaim,
 
   Role,
   ClusterRole,

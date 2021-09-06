@@ -29,8 +29,8 @@ export default class TemplateRender {
   private log = createLogger('template')
 
   public async readCustomizedValues(workingDir: string, cmdParams: Map<string, string>, clusters: KubernetesEnvironment[], model: IApplicationModel): Promise<Map<string, KV>> {
-    this.log.info('loading dynamic parameters for different environments.')
     const valuesDir = path.join(workingDir, VALUES_DIR)
+    this.log.info(`loading dynamic parameters from ${valuesDir}`)
 
     // final result after transform, like { "someEnv": { "someParam" : "someValue" } }
     const result = new Map<string, KV>()
@@ -60,8 +60,9 @@ export default class TemplateRender {
       Object.keys(envKV).forEach(env => {
         const value = envKV[env]
         if (!result.has(env)) {
-          this.log.warn(`not recognized environment name: ${env}, skipped.`)
           return
+        } else {
+          this.log.info(`value of parameter '${param}' for env '${env}' fetched.`)
         }
         const tmp = result.get(env) as KV
         tmp[param] = value
@@ -111,7 +112,7 @@ export default class TemplateRender {
   }
 
   public async renderTemplate(workDir: string, relativePath: string, handleInclude: boolean, customizedValues: KV): Promise<string> {
-    this.log.info('read template file', relativePath)
+    this.log.info(`read template file: ${relativePath}`)
     const isYaml = relativePath.endsWith('.yml') || relativePath.endsWith('.yaml')
     let str = await this.checkAndReadFile(workDir, relativePath)
 
@@ -132,14 +133,15 @@ export default class TemplateRender {
     return yaml.load(str)
   }
 
-  private async readCustomizedValuesRecursive(workingDir: string, valuesDir: string, depth: number): Promise<Map<string, KV>> {
+  private async readCustomizedValuesRecursive(workingDir: string, relativePath: string, depth: number): Promise<Map<string, KV>> {
     const rawParameters = new Map<string, KV>()
     if (depth >= 5) {
       return rawParameters
     }
-    const valueFiles = await fs.readdir(valuesDir)
+    const baseDir = path.join(workingDir, relativePath)
+    const valueFiles = await fs.readdir(baseDir)
     for (const file of valueFiles) {
-      const tmp = path.join(valuesDir, file)
+      const tmp = path.join(baseDir, file)
       // recursively scan values/ directory and sub directories
       if (fs.statSync(tmp).isDirectory()) {
         const tmpMap = await this.readCustomizedValuesRecursive(workingDir, tmp, depth + 1)

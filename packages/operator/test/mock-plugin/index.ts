@@ -17,7 +17,7 @@ export default {
     // 'prepare.type=terraform': terraformOperator,
     // 'prepare.type=pulumi': pulumiOperator,
 
-    'config[@.type=="configMap"]': configOperator,
+    'config[?(@.type=="configMap")]': configOperator,
     // 'config.type=secret': secretOperator,
 
     // 'deploy.type=deployment': deploymentOperator,

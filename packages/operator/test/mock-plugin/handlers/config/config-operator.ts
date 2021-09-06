@@ -11,10 +11,10 @@ const configOperator: OperateFunction<Configuration> = async (plan, diff) => {
         // eg: my-conf/~{ some.param }/app.config.yaml => mount as 'app.config.yaml'
         const tailingFilePath = confPath.substring(confPath.lastIndexOf('/') + 1)
         if (confPath.indexOf('/') !== -1) {
-          plan.log.info(`${confPath} will be flatted to ${tailingFilePath} because configMap doesn't support nested directories`)
+          plan.log.info(`config file path '${confPath}' will be flatted to '${tailingFilePath}'.`)
         }
         configMapData[tailingFilePath] = configData
-        plan.log.debug(configData, `configuration ${item.name}.${tailingFilePath} rendered`)
+        plan.log.debug(`config '${item.name}' rendered, +'${tailingFilePath}', value is\n: ${configData}`)
       }
       plan.action(async (ctx) => {
         await ctx.k8sClient.saveConfig({

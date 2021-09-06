@@ -78,7 +78,7 @@ export default class YamPluginComposer {
       this.mergeHandlers(pluginModule, mergedHandlers, plugin)
     }
     this.sortHandlers(mergedHandlers)
-    this.log.info(`plugins and schema loaded, composed ${mergedHandlers.length} operation handlers.`)
+    this.log.info(`plugins and schema loaded, ${mergedHandlers.length} operation handlers composed.`)
     return { jsonSchema: mergedJsonSchema, handlers: mergedHandlers }
   }
 

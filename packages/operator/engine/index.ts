@@ -42,7 +42,7 @@ export default class YamEngine {
     // YAM data validation with final json schema
     const errors = validateJsonSchema(current, jsonSchema)
     if (errors) {
-      this.log.error("schema check didn't pass", errors)
+      this.log.error(errors, "schema check didn't pass")
       throw new Error('application model is not valid.')
     } else {
       this.log.info('schema check passed, application model definition is valid.')
@@ -57,7 +57,7 @@ export default class YamEngine {
       previousModelFull: prev,
       // dynamic parameters for template rendering
       customizedValues,
-      // others esstential context data
+      // others essential context data
       workingDir: this.operatorParam.workingDir,
       stackName: cluster.stack,
       envTagName: cluster.name,
@@ -70,7 +70,7 @@ export default class YamEngine {
 
     // store the planned binary file to local or/and cloud
     await this.store.persistPlan(planContext)
-    this.log.info('============== Plan Stage End ==============')
+    this.log.info('============== Plan Stage End ================')
     return planContext
   }
 
@@ -78,19 +78,19 @@ export default class YamEngine {
    * Apply Stage, lock and call actions
    */
   public async apply(param: OperatorParam, planCtx: PlanContext, executeCtx: ExecuteContext): Promise<void> {
+    this.log.info('============== Apply Stage Start =============')
     const lockObj = await this.locker.lock(param)
     try {
-      this.log.info('============== Apply Stage Start ==============')
       for (const action of planCtx.data.actions) {
         const actionName = (action as unknown as KV).actionName || action.name || '<anonymous>'
         this.log.info(`[${actionName}] - action executing.`)
         await action(executeCtx)
         this.log.info(`[${actionName}] - action done.`)
       }
-      this.log.info('============== Apply Stage End ==============')
+      await this.store.storeResult()
     } finally {
       await this.locker.unlock(param, lockObj)
-      await this.store.storeResult()
+      this.log.info('============== Apply Stage End ===============')
     }
   }
 
@@ -109,7 +109,7 @@ export default class YamEngine {
             name: namespace
           }
         })
-        ctx.log.info(`new namespace ${namespace} created.`)
+        ctx.log.info(`new namespace '${namespace}' created.`)
 
       }
     }

@@ -1,1 +1,2 @@
-my-app-configs: values
+my-app-configs: 
+  dev: values

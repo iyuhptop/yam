@@ -18,11 +18,11 @@ config:
     name: my-config
     mount: /path/to/config
     from:
-      - app-config/app.config.yaml
+      - app-config/application.yml
     container: main
 
 deploy:
-  type: Deployment
+  type: deployment
 
   version: 1.0.0
 
@@ -56,7 +56,7 @@ deploy:
     interval: 5s
     onFailure:
       - times: 3
-        action: disconnect
+        action: preventTraffic
       - times: 12
         action: restart
 
