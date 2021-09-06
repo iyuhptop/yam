@@ -1,0 +1,8 @@
+schema: application/1.0
+metadata:
+  app: details
+  namespace: default
+deploy:
+  type: deployment
+  image: docker.io/istio/examples-bookinfo-details-~{version}:1.16.2
+  port: 9080

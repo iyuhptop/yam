@@ -1,0 +1,15 @@
+- name: book-info-detail
+  path: ./details
+  version: v1
+
+- name: book-info-ratings
+  path: ./ratings
+  version: v1
+
+- name: book-info-reviews
+  path: ./reviews
+  version: v1
+
+- name: book-info-productpage
+  path: ./productpage
+  version: v1

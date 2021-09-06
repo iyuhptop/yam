@@ -1,0 +1,12 @@
+schema: application/1.0
+metadata:
+  app: productpage
+  namespace: default
+deploy:
+  type: deployment
+  image: docker.io/istio/examples-bookinfo-productpage-~{version}:1.16.2
+  port: 9080
+  mounts:
+    - type: emptyDir
+      name: tmp
+      path: /tmp

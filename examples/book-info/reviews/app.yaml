@@ -1,0 +1,18 @@
+schema: application/1.0
+metadata:
+  app: ratings
+  namespace: default
+deploy:
+  type: deployment
+  image: docker.io/istio/examples-bookinfo-ratings-~{version}:1.16.2
+  port: 9080
+  env:
+    - name: LOG_DIR
+      value: "/tmp/logs"
+  mounts:
+    - type: emptyDir
+      name: tmp
+      path: /tmp
+    - type: emptyDir
+      name: wlp-output
+      path: /opt/ibm/wlp/output

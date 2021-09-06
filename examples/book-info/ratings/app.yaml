@@ -1,0 +1,11 @@
+schema: application/1.0
+metadata:
+  app: reviews
+  namespace: default
+deploy:
+  type: deployment
+  image: docker.io/istio/examples-bookinfo-reviews-~{version}:1.16.2
+  port: 9080
+
+  canaryMode: true
+  coExistVersions: 3
